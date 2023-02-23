@@ -1,0 +1,39 @@
+Package: scregclust
+Title: Reconstructing the regulatory programs of target genes in single cell data
+Version: 0.1
+Authors@R: c(
+    person("Ida", "Larsson", ,"ida.larsson@igp.uu.se", role = c("aut"),
+           comment = c(ORCID = "0000-0001-5422-4243")),
+    person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7679-7752")),
+    person("Sven", "Nelander", ,"sven.nelander@igp.uu.se", role = c("aut"),
+           comment = c(ORCID = "0000-0003-1758-1262")))
+Description: This package provides an implementation of our scRegClust
+ algorithm (Larsson, Held, et al., 2023, <bioRxiv:...>) which aims to
+ reconstruct the regulatory programs of target genes in single cell data.
+ Target genes are clustered and each cluster is associated with a linear
+ model accounting for the regulatory program driving the genes in the cluster.
+Encoding: UTF-8
+Depends: R (>= 3.1.0)
+Imports:
+    Matrix,
+    stats,
+    methods,
+    utils,
+    reshape,
+    igraph,
+    graphics,
+    cli,
+    prettyunits,
+    Rcpp (>= 1.0.8)
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+LinkingTo: Rcpp, RcppEigen
+SystemRequirements: C++11
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+License: GPL (>= 3)
+Config/testthat/edition: 3

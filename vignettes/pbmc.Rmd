@@ -1,0 +1,19 @@
+---
+title: "pbmc"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{pbmc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(scregclust)
+```
