@@ -1389,6 +1389,7 @@ scregclust <- function(expression,
     r2_cluster_adj <- vector("list", final_cycle_length)
     importance <- vector("list", final_cycle_length)
     importance_adj <- vector("list", final_cycle_length)
+    r2_cross_cluster <- vector("list", final_cycle_length)
 
     for (m in seq_len(final_cycle_length)) {
       k <- k_history[[length(k_history) - m + 1L]]
@@ -1524,6 +1525,60 @@ scregclust <- function(expression,
         }
       }
 
+      # Compute cross-cluster R2
+      sum_squares_test <- matrix(
+        rep.int(colSums(z2_target_scaled^2), n_cl),
+        nrow = ncol(z2_target_scaled),
+        ncol = n_cl
+      )
+
+      for (j in seq_len(n_cl)) {
+        # Get regulators used in cluster/model j
+        reg_cl <- which(models[, j] == TRUE)
+        if (length(reg_cl) > 0L) {
+          z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
+          z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
+
+          signs_cl <- signs[reg_cl, j]
+          # Adjust the sign of the predicting regulators and estimate
+          # coefficients using non-negative least squares for
+          # sign-consistent estimates (following Meinshausen, 2013)
+          z1_reg_scaled_cl_sign_corrected <- (
+            z1_reg_scaled_cl
+            %*% diag(
+              signs_cl,
+              nrow = length(signs_cl),
+              ncol = length(signs_cl)
+            )
+          )
+
+          beta_hat_nnls <- coef_nnls(
+            z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
+            eps = 1e-8, max_iter = max_optim_iter
+          )$beta * signs_cl
+
+          sum_squares_test[, j] <- colSums((
+            z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
+          )^2)
+        }
+      }
+
+      r2_cross_cluster[[m]] <- matrix(0, nrow = n_cl, ncol = n_cl)
+
+      for (j in seq_len(n_cl)) {
+        target_cl <- which(k == j)
+        denom <- sum(scale(
+          z2_target_scaled[, target_cl, drop = FALSE],
+          center = TRUE,
+          scale = FALSE
+        )^2)
+        for (i in seq_len(n_cl)) {
+          r2_cross_cluster[[m]][j, ] <- (
+            1 - colSums(sum_squares_test[target_cl, ]) / denom
+          )
+        }
+      }
+
       # "Hack" to put regulators in tentative cluster
       k_ <- k
       k_[k == -1L] <- n_cl + 1L
@@ -1602,7 +1657,8 @@ scregclust <- function(expression,
           weights = weights_final[[m]],
           coeffs = coeffs_final[[m]],
           importance = importance[[m]],
-          importance_adj = importance_adj[[m]]
+          importance_adj = importance_adj[[m]],
+          r2_cross_cluster = r2_cross_cluster[[m]]
         )
       })
     ), class = "scregclust_result")
