@@ -1112,7 +1112,6 @@ scregclust <- function(expression,
 
       # Do not perform on last step
       if (last_cycle) {
-        sq_residuals_test <- NULL
         break
       }
 
