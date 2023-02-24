@@ -1110,8 +1110,9 @@ scregclust <- function(expression,
       ## START Step 2: Determining target gene coefficients ##
       ########################################################
 
-      # Do not perform this step on the last cycle
+      # Do not perform on last step
       if (last_cycle) {
+        sq_residuals_test <- NULL
         break
       }
 
@@ -1404,25 +1405,7 @@ scregclust <- function(expression,
         NA_real_, nrow = sum(is_regulator), ncol = n_cl
       )
 
-      # if (verbose) {
-      #   start_time <- Sys.time()
-      #   sb <- cli::cli_status(paste(
-      #     "{cli::symbol$arrow_right} Determine regulator importance"
-      #   ))
-      # }
-
       for (j in seq_len(n_cl)) {
-        # if (verbose) {
-        #   cluster_progstr <- progstr(j, n_cl, "clusters")
-        #   cli::cli_status_update(
-        #     id = sb,
-        #     paste(
-        #       "{cli::symbol$arrow_right} Determine regulator importance",
-        #       cluster_progstr
-        #     )
-        #   )
-        # }
-
         # Get regulators used in cluster j
         reg_cl <- which(models_final[[m]][, j] == TRUE)
         # Get genes in cluster j
@@ -1432,7 +1415,6 @@ scregclust <- function(expression,
           ssq <- matrix(
             NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1
           )
-          # ssq <- vector("double", length(reg_cl) + 1L)
           remove_reg <- c(list(integer(0)), lapply(reg_cl, function(r) r))
 
           for (r in seq_along(remove_reg)) {
@@ -1465,7 +1447,6 @@ scregclust <- function(expression,
               - z2_reg_scaled_cl %*% beta_hat_nnls
             )
 
-            # ssq[r] <- sum(residuals_test_nnls^2)
             ssq[, r] <- colSums(residuals_test_nnls^2)
           }
 
