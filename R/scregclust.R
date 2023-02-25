@@ -1574,7 +1574,7 @@ scregclust <- function(expression,
         )^2)
         for (i in seq_len(n_cl)) {
           r2_cross_cluster[[m]][j, ] <- (
-            1 - colSums(sum_squares_test[target_cl, ]) / denom
+            1 - colSums(sum_squares_test[target_cl, , drop = FALSE]) / denom
           )
         }
       }
