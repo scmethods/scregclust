@@ -4,6 +4,8 @@ The goal of scregclust is to cluster genes by regulatory programs. To do
 so, clusters are associated with regulatory programs and target genes
 are allocated to clusters with best fitting regulatory programs.
 
+See the provided vignette on how to use the algorithm.
+
 ## Installation
 
 You can install the development version of scregclust from
@@ -11,17 +13,5 @@ You can install the development version of scregclust from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("idalarsson/scEM_package")
+devtools::install_github("sven-nelander/scregclust")
 ```
-
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(scregclust)
-## basic example code
-# scregclust()
-```
-
-You can expect output like…
