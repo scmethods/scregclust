@@ -1725,6 +1725,30 @@ print.scregclust_result <- function(x, ...) {
   cat(format_scregclust_result(x), "\n")
 }
 
+format_scregclust <- function(fit) {
+  paste0(
+    cli::col_grey("# scRegClust fit object"),
+    "\n",
+    cli::col_grey("# Clusters: "),
+    cli::col_blue(fit$results[[1]]$n_cl),
+    "\n",
+    cli::col_grey("# Penalization parameters:"),
+    "\n",
+    cli::col_grey("# "),
+    cli::col_blue(paste(fit$penalization, collapse = ", "))
+  )
+}
+
+#' @export
+format.scregclust <- function(x, ...) {
+  cli::ansi_strip(format_scregclust(x))
+}
+
+#' @export
+print.scregclust <- function(x, ...) {
+  cat(format_scregclust(x), "\n")
+}
+
 #' Split Sample
 #'
 #' Splits sample in train and test set
