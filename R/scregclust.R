@@ -92,6 +92,9 @@
 #'                          centers
 #' @param n_init_clusterings number of initial initialisation runs
 #' @param max_optim_iter maximum number of iterations during optimization
+#' @param compute_predictive_r2 whether to compute predictive R2 per cluster
+#'                              and regulator importance
+#' @param compute_cross_cluster_r2 whether to compute cross cluster R2
 #' @param verbose whether to print progress
 #'
 #' @return an object of S3 class `scregclust` containing
@@ -123,6 +126,8 @@ scregclust <- function(expression,
                        use_kmeanspp_init = TRUE,
                        n_init_clusterings = 50L,
                        max_optim_iter = 10000L,
+                       compute_predictive_r2 = TRUE,
+                       compute_cross_cluster_r2 = FALSE,
                        verbose = TRUE) {
   ###############################
   # START input validation
@@ -571,6 +576,36 @@ scregclust <- function(expression,
     )
   } else {
     max_optim_iter <- as.integer(max_optim_iter)
+  }
+
+  if (!(
+    is.logical(compute_predictive_r2)
+    && length(compute_predictive_r2) == 1
+  )) {
+    if (cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(
+      "{.var compute_predictive_r2} needs to be TRUE or FALSE."
+    )
+  } else {
+    compute_predictive_r2 <- compute_predictive_r2
+  }
+
+  if (!(
+    is.logical(compute_cross_cluster_r2)
+    && length(compute_cross_cluster_r2) == 1
+  )) {
+    if (cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(
+      "{.var compute_cross_cluster_r2} needs to be TRUE or FALSE."
+    )
+  } else {
+    compute_cross_cluster_r2 <- compute_cross_cluster_r2
   }
 
   if (!(
@@ -1394,36 +1429,155 @@ scregclust <- function(expression,
     for (m in seq_len(final_cycle_length)) {
       k <- k_history[[length(k_history) - m + 1L]]
 
-      r2_imp[[m]] <- vector("list", n_cl)
-      r2_imp_adj[[m]] <- vector("list", n_cl)
-      r2_cluster[[m]] <- rep(NA_real_, n_cl)
-      r2_cluster_adj[[m]] <- rep(NA_real_, n_cl)
-      importance[[m]] <- matrix(
-        NA_real_, nrow = sum(is_regulator), ncol = n_cl
-      )
-      importance_adj[[m]] <- matrix(
-        NA_real_, nrow = sum(is_regulator), ncol = n_cl
-      )
+      if (compute_predictive_r2) {
+        r2_imp[[m]] <- vector("list", n_cl)
+        r2_imp_adj[[m]] <- vector("list", n_cl)
+        r2_cluster[[m]] <- rep(NA_real_, n_cl)
+        r2_cluster_adj[[m]] <- rep(NA_real_, n_cl)
+        importance[[m]] <- matrix(
+          NA_real_, nrow = sum(is_regulator), ncol = n_cl
+        )
+        importance_adj[[m]] <- matrix(
+          NA_real_, nrow = sum(is_regulator), ncol = n_cl
+        )
 
-      for (j in seq_len(n_cl)) {
-        # Get regulators used in cluster j
-        reg_cl <- which(models_final[[m]][, j] == TRUE)
-        # Get genes in cluster j
-        target_cl <- which(k == j)
+        for (j in seq_len(n_cl)) {
+          # Get regulators used in cluster j
+          reg_cl <- which(models_final[[m]][, j] == TRUE)
+          # Get genes in cluster j
+          target_cl <- which(k == j)
 
-        if (length(target_cl) > 0L && length(reg_cl) > 0L) {
-          ssq <- matrix(
-            NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1
-          )
-          remove_reg <- c(list(integer(0)), lapply(reg_cl, function(r) r))
+          if (length(target_cl) > 0L && length(reg_cl) > 0L) {
+            ssq <- matrix(
+              NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1
+            )
+            remove_reg <- c(list(integer(0)), lapply(reg_cl, function(r) r))
 
-          for (r in seq_along(remove_reg)) {
-            reg_cl_mod <- setdiff(reg_cl, remove_reg[r])
+            for (r in seq_along(remove_reg)) {
+              reg_cl_mod <- setdiff(reg_cl, remove_reg[r])
 
-            z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl_mod, drop = FALSE]
-            z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl_mod, drop = FALSE]
+              z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl_mod, drop = FALSE]
+              z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl_mod, drop = FALSE]
 
-            signs_cl <- signs_final[[m]][reg_cl_mod, j]
+              signs_cl <- signs_final[[m]][reg_cl_mod, j]
+              # Adjust the sign of the predicting regulators and estimate
+              # coefficients using non-negative least squares for
+              # sign-consistent estimates (following Meinshausen, 2013)
+              z1_reg_scaled_cl_sign_corrected <- (
+                z1_reg_scaled_cl
+                %*% diag(
+                  signs_cl,
+                  nrow = length(signs_cl),
+                  ncol = length(signs_cl)
+                )
+              )
+
+              beta_hat_nnls <- coef_nnls(
+                z1_reg_scaled_cl_sign_corrected,
+                z1_target_scaled[, target_cl, drop = FALSE],
+                eps = 1e-8, max_iter = max_optim_iter
+              )$beta * signs_cl
+
+              residuals_test_nnls <- (
+                z2_target_scaled[, target_cl, drop = FALSE]
+                - z2_reg_scaled_cl %*% beta_hat_nnls
+              )
+
+              ssq[, r] <- colSums(residuals_test_nnls^2)
+            }
+
+            # Compute R2
+            r2_imp_vec <- 1 - (
+              colSums(ssq) / sum(scale(
+                z2_target_scaled[, target_cl, drop = FALSE],
+                center = TRUE,
+                scale = FALSE
+              )^2)
+            )
+
+            r2_imp[[m]][[j]] <- 1 - t(
+              t(ssq) / colSums(scale(
+                  z2_target_scaled[, target_cl, drop = FALSE],
+                  center = TRUE,
+                  scale = FALSE
+              )^2)
+            )
+            colnames(r2_imp[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
+            rownames(r2_imp[[m]][[j]]) <- genesymbols_target[target_cl]
+
+            # Compute adjusted R2
+            r2_imp_adj_vec <- vector("double", length(r2_imp_vec))
+            r2_imp_adj_vec[1] <- (
+              1 - (1 - r2_imp_vec[1]) * (
+                (length(target_cl) * nrow(z2_target_scaled) - 1)
+                / (length(target_cl) * nrow(z2_target_scaled) - sum(models[, j]))
+              )
+            )
+            r2_imp_adj_vec[2L:(length(reg_cl) + 1L)] <- (
+              1 - (1 - r2_imp_vec[2L:(length(reg_cl) + 1L)]) * (
+                (length(target_cl) * nrow(z2_target_scaled) - 1)
+                / (
+                  length(target_cl) * nrow(z2_target_scaled)
+                  - sum(models[, j]) + 1
+                )
+              )
+            )
+
+            r2_imp_adj[[m]][[j]] <- matrix(
+              NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1L
+            )
+            r2_imp_adj[[m]][[j]][, 1] <- (
+              1 - (1 - r2_imp[[m]][[j]][, 1]) * (
+                (nrow(z2_target_scaled) - 1)
+                / (nrow(z2_target_scaled) - sum(models[, j]))
+              )
+            )
+            r2_imp_adj[[m]][[j]][, 2L:(length(reg_cl) + 1L)] <- (
+              1 - (1 - r2_imp[[m]][[j]][, 2L:(length(reg_cl) + 1L)]) * (
+                (nrow(z2_target_scaled) - 1)
+                / (nrow(z2_target_scaled) - sum(models[, j]) + 1)
+              )
+            )
+            colnames(r2_imp_adj[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
+            rownames(r2_imp_adj[[m]][[j]]) <- genesymbols_target[target_cl]
+
+            # Save cluster specific R2
+            r2_cluster[[m]][j] <- r2_imp_vec[1]
+            r2_cluster_adj[[m]][j] <- r2_imp_adj_vec[1]
+
+            # Compute importances
+            importance[[m]][reg_cl, j] <- (
+              1 - (
+                r2_imp_vec[2L:(length(reg_cl) + 1L)]
+                / r2_cluster[[m]][j]
+              )
+            )
+            importance_adj[[m]][reg_cl, j] <- (
+              1 - (
+                r2_imp_adj_vec[2L:(length(reg_cl) + 1L)]
+                / r2_cluster_adj[[m]][j]
+              )
+            )
+          }
+        }
+      }
+
+      if (compute_cross_cluster_r2) {
+        # Compute cross-cluster R2
+        sum_squares_test <- matrix(
+          rep.int(colSums(z2_target_scaled^2), n_cl),
+          nrow = ncol(z2_target_scaled),
+          ncol = n_cl
+        )
+
+        for (j in seq_len(n_cl)) {
+          # Get regulators used in cluster/model j
+          reg_cl <- which(models[, j] == TRUE)
+          if (length(reg_cl) > 0L) {
+            z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
+            z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
+
+            signs_cl <- signs[reg_cl, j]
             # Adjust the sign of the predicting regulators and estimate
             # coefficients using non-negative least squares for
             # sign-consistent estimates (following Meinshausen, 2013)
@@ -1437,145 +1591,35 @@ scregclust <- function(expression,
             )
 
             beta_hat_nnls <- coef_nnls(
-              z1_reg_scaled_cl_sign_corrected,
-              z1_target_scaled[, target_cl, drop = FALSE],
+              z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
               eps = 1e-8, max_iter = max_optim_iter
             )$beta * signs_cl
 
-            residuals_test_nnls <- (
-              z2_target_scaled[, target_cl, drop = FALSE]
-              - z2_reg_scaled_cl %*% beta_hat_nnls
-            )
-
-            ssq[, r] <- colSums(residuals_test_nnls^2)
+            sum_squares_test[, j] <- colSums((
+              z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
+            )^2)
           }
-
-          # Compute R2
-          r2_imp_vec <- 1 - (
-            colSums(ssq) / sum(scale(
-              z2_target_scaled[, target_cl, drop = FALSE],
-              center = TRUE,
-              scale = FALSE
-            )^2)
-          )
-
-          r2_imp[[m]][[j]] <- 1 - t(
-            t(ssq) / colSums(scale(
-                z2_target_scaled[, target_cl, drop = FALSE],
-                center = TRUE,
-                scale = FALSE
-            )^2)
-          )
-          colnames(r2_imp[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
-          rownames(r2_imp[[m]][[j]]) <- genesymbols_target[target_cl]
-
-          # Compute adjusted R2
-          r2_imp_adj_vec <- vector("double", length(r2_imp_vec))
-          r2_imp_adj_vec[1] <- (
-            1 - (1 - r2_imp_vec[1]) * (
-              (length(target_cl) * nrow(z2_target_scaled) - 1)
-              / (length(target_cl) * nrow(z2_target_scaled) - sum(models[, j]))
-            )
-          )
-          r2_imp_adj_vec[2L:(length(reg_cl) + 1L)] <- (
-            1 - (1 - r2_imp_vec[2L:(length(reg_cl) + 1L)]) * (
-              (length(target_cl) * nrow(z2_target_scaled) - 1)
-              / (
-                length(target_cl) * nrow(z2_target_scaled)
-                - sum(models[, j]) + 1
-              )
-            )
-          )
-
-          r2_imp_adj[[m]][[j]] <- matrix(
-            NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1L
-          )
-          r2_imp_adj[[m]][[j]][, 1] <- (
-            1 - (1 - r2_imp[[m]][[j]][, 1]) * (
-              (nrow(z2_target_scaled) - 1)
-              / (nrow(z2_target_scaled) - sum(models[, j]))
-            )
-          )
-          r2_imp_adj[[m]][[j]][, 2L:(length(reg_cl) + 1L)] <- (
-            1 - (1 - r2_imp[[m]][[j]][, 2L:(length(reg_cl) + 1L)]) * (
-              (nrow(z2_target_scaled) - 1)
-              / (nrow(z2_target_scaled) - sum(models[, j]) + 1)
-            )
-          )
-          colnames(r2_imp_adj[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
-          rownames(r2_imp_adj[[m]][[j]]) <- genesymbols_target[target_cl]
-
-          # Save cluster specific R2
-          r2_cluster[[m]][j] <- r2_imp_vec[1]
-          r2_cluster_adj[[m]][j] <- r2_imp_adj_vec[1]
-
-          # Compute importances
-          importance[[m]][reg_cl, j] <- (
-            1 - (
-              r2_imp_vec[2L:(length(reg_cl) + 1L)]
-              / r2_cluster[[m]][j]
-            )
-          )
-          importance_adj[[m]][reg_cl, j] <- (
-            1 - (
-              r2_imp_adj_vec[2L:(length(reg_cl) + 1L)]
-              / r2_cluster_adj[[m]][j]
-            )
-          )
         }
-      }
 
-      # Compute cross-cluster R2
-      sum_squares_test <- matrix(
-        rep.int(colSums(z2_target_scaled^2), n_cl),
-        nrow = ncol(z2_target_scaled),
-        ncol = n_cl
-      )
+        r2_cross_cluster[[m]] <- matrix(0, nrow = n_cl, ncol = n_cl)
 
-      for (j in seq_len(n_cl)) {
-        # Get regulators used in cluster/model j
-        reg_cl <- which(models[, j] == TRUE)
-        if (length(reg_cl) > 0L) {
-          z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
-          z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
-
-          signs_cl <- signs[reg_cl, j]
-          # Adjust the sign of the predicting regulators and estimate
-          # coefficients using non-negative least squares for
-          # sign-consistent estimates (following Meinshausen, 2013)
-          z1_reg_scaled_cl_sign_corrected <- (
-            z1_reg_scaled_cl
-            %*% diag(
-              signs_cl,
-              nrow = length(signs_cl),
-              ncol = length(signs_cl)
-            )
-          )
-
-          beta_hat_nnls <- coef_nnls(
-            z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
-            eps = 1e-8, max_iter = max_optim_iter
-          )$beta * signs_cl
-
-          sum_squares_test[, j] <- colSums((
-            z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
+        for (j in seq_len(n_cl)) {
+          target_cl <- which(k == j)
+          denom <- sum(scale(
+            z2_target_scaled[, target_cl, drop = FALSE],
+            center = TRUE,
+            scale = FALSE
           )^2)
-        }
-      }
-
-      r2_cross_cluster[[m]] <- matrix(0, nrow = n_cl, ncol = n_cl)
-
-      for (j in seq_len(n_cl)) {
-        target_cl <- which(k == j)
-        denom <- sum(scale(
-          z2_target_scaled[, target_cl, drop = FALSE],
-          center = TRUE,
-          scale = FALSE
-        )^2)
-        for (i in seq_len(n_cl)) {
-          r2_cross_cluster[[m]][j, ] <- (
-            1 - colSums(sum_squares_test[target_cl, , drop = FALSE]) / denom
-          )
+          # If there are no target genes in the cluster then denom == 0
+          # and the R2 becomes NaN. So leave it at 0 in this case since there
+          # is nothing to predict and its not relevant.
+          if (length(target_cl) > 0) {
+            for (i in seq_len(n_cl)) {
+              r2_cross_cluster[[m]][j, ] <- (
+                1 - colSums(sum_squares_test[target_cl, , drop = FALSE]) / denom
+              )
+            }
+          }
         }
       }
 
@@ -1652,13 +1696,13 @@ scregclust <- function(expression,
           r2_imp_adj = r2_imp_adj[[m]],
           r2_cluster = r2_cluster[[m]],
           r2_cluster_adj = r2_cluster_adj[[m]],
+          r2_cross_cluster = r2_cross_cluster[[m]],
+          importance = importance[[m]],
+          importance_adj = importance_adj[[m]],
           models = models_final[[m]],
           signs = signs_final[[m]],
           weights = weights_final[[m]],
-          coeffs = coeffs_final[[m]],
-          importance = importance[[m]],
-          importance_adj = importance_adj[[m]],
-          r2_cross_cluster = r2_cross_cluster[[m]]
+          coeffs = coeffs_final[[m]]
         )
       })
     ), class = "scregclust_result")
