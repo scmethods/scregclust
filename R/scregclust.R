@@ -140,7 +140,7 @@ scregclust <- function(expression,
   }
 
   if (!(is.matrix(expression) && is.numeric(expression))) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -151,7 +151,7 @@ scregclust <- function(expression,
   n <- ncol(expression)
 
   if (length(genesymbols) != p) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -172,7 +172,7 @@ scregclust <- function(expression,
       || all(unique(is_regulator) %in% c(TRUE, FALSE))
     )
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -201,7 +201,7 @@ scregclust <- function(expression,
       || length(target_cluster_start) == sum(is_regulator == 0)
     )
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -227,7 +227,7 @@ scregclust <- function(expression,
     && length(penalization) >= 1L
     && all(penalization > 0)
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -249,7 +249,7 @@ scregclust <- function(expression,
       && length(sample_assignment) == n
     )
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -273,7 +273,7 @@ scregclust <- function(expression,
     && 0 < split1_proportion
     && split1_proportion < 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -290,7 +290,7 @@ scregclust <- function(expression,
     && 0 < total_proportion
     && total_proportion <= 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -311,7 +311,7 @@ scregclust <- function(expression,
       && length(unique(dim(prior_indicator))) == 1L
       && Matrix::isSymmetric(prior_indicator)
     )) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -328,7 +328,7 @@ scregclust <- function(expression,
     }
 
     if (is.null(prior_genesymbols)) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -341,7 +341,7 @@ scregclust <- function(expression,
     }
 
     if (length(prior_genesymbols) != nrow(prior_indicator)) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -360,7 +360,7 @@ scregclust <- function(expression,
       && length(prior_baseline) == 1L
       && prior_baseline > 0
     )) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -377,7 +377,7 @@ scregclust <- function(expression,
       && prior_weight >= 0
       && prior_weight <= 1
     )) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -426,7 +426,7 @@ scregclust <- function(expression,
     && as.integer(min_cluster_size) == min_cluster_size
     && min_cluster_size >= 0
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -441,7 +441,7 @@ scregclust <- function(expression,
     is.logical(allocate_per_obs)
     && length(allocate_per_obs) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -458,7 +458,7 @@ scregclust <- function(expression,
     && 0 <= cluster_inertia
     && cluster_inertia <= 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -468,7 +468,7 @@ scregclust <- function(expression,
     ))
   } else {
     if (cluster_inertia > 0 && !allocate_per_obs) {
-      if (cl) {
+      if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
@@ -489,7 +489,7 @@ scregclust <- function(expression,
     && length(noise_threshold) == 1
     && noise_threshold >= 0
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -504,7 +504,7 @@ scregclust <- function(expression,
     is.logical(center)
     && length(center) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -520,7 +520,7 @@ scregclust <- function(expression,
     && as.integer(n_cycles) == n_cycles
     && n_cycles > 0
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -535,7 +535,7 @@ scregclust <- function(expression,
     is.logical(use_kmeanspp_init)
     && length(use_kmeanspp_init) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -551,7 +551,7 @@ scregclust <- function(expression,
     && as.integer(n_init_clusterings) == n_init_clusterings
     && n_init_clusterings > 0
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -567,7 +567,7 @@ scregclust <- function(expression,
     && as.integer(max_optim_iter) == max_optim_iter
     && max_optim_iter > 0
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -582,7 +582,7 @@ scregclust <- function(expression,
     is.logical(compute_predictive_r2)
     && length(compute_predictive_r2) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -597,7 +597,7 @@ scregclust <- function(expression,
     is.logical(compute_cross_cluster_r2)
     && length(compute_cross_cluster_r2) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -612,7 +612,7 @@ scregclust <- function(expression,
     is.logical(verbose)
     && length(verbose) == 1
   )) {
-    if (cl) {
+    if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
@@ -1374,7 +1374,9 @@ scregclust <- function(expression,
       k_history[[n_k]] <- k
 
       if (length(matching_clustering) > 0L) {
-        cat("\n")
+        if (verbose) {
+          cat("\n")
+        }
         converged <- TRUE
         if (n_k - matching_clustering == 1L) {
           if (verbose) {
