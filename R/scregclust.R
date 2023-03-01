@@ -1425,6 +1425,7 @@ scregclust <- function(expression,
     importance <- vector("list", final_cycle_length)
     importance_adj <- vector("list", final_cycle_length)
     r2_cross_cluster <- vector("list", final_cycle_length)
+    r2_cross_cluster_per_target <- vector("list", final_cycle_length)
 
     for (m in seq_len(final_cycle_length)) {
       k <- k_history[[length(k_history) - m + 1L]]
@@ -1510,7 +1511,10 @@ scregclust <- function(expression,
             r2_imp_adj_vec[1] <- (
               1 - (1 - r2_imp_vec[1]) * (
                 (length(target_cl) * nrow(z2_target_scaled) - 1)
-                / (length(target_cl) * nrow(z2_target_scaled) - sum(models[, j]))
+                / (
+                  length(target_cl) * nrow(z2_target_scaled)
+                  - sum(models[, j])
+                )
               )
             )
             r2_imp_adj_vec[2L:(length(reg_cl) + 1L)] <- (
@@ -1621,6 +1625,14 @@ scregclust <- function(expression,
             }
           }
         }
+
+        r2_cross_cluster_per_target[[m]] <- (
+          1 - sum_squares_test / colSums(scale(
+            z2_target_scaled,
+            center = TRUE,
+            scale = FALSE
+          )^2)
+        )
       }
 
       # "Hack" to put regulators in tentative cluster
@@ -1697,6 +1709,7 @@ scregclust <- function(expression,
           r2_cluster = r2_cluster[[m]],
           r2_cluster_adj = r2_cluster_adj[[m]],
           r2_cross_cluster = r2_cross_cluster[[m]],
+          r2_cross_cluster_per_target = r2_cross_cluster_per_target[[m]],
           importance = importance[[m]],
           importance_adj = importance_adj[[m]],
           models = models_final[[m]],
