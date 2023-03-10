@@ -1,105 +1,129 @@
-#' Uncover gene modules and associated regulators from single cell data
+#' Uncover gene modules and their regulatory programs from single-cell data
 #'
-#' Use the scRegClust algorithm to determine gene modules and associated
-#' regulatory programs from single cell data.
-#'
-#' The list of `results` returned by this function contain the following:
-#'
-#' For each supplied penalization parameter, `results` contains one list
-#' which contains the current `penalization` parameter, the supplied
-#' `genesymbols` after filtering (as used during fitting), the supplied
-#' `is_regulator` vector after filtering (as used during fitting), as well as
-#' an `output` object. It is possible that the algorithm ends in a cycle
-#' instead of a unique final constellation. Therefore, `output` is a list
-#' with each element itself being a list with the following contents:
-#' \describe{
-#'   \item{`reg_table`}{a regulator table, a matrix of weights for each
-#'                      regulator and cluster}
-#'   \item{`cluster`}{the cluster assignments for all genes (including
-#'                  regulators); regulators are placed in clusters with the
-#'                  highest accumulated correlation between target genes
-#'                  and regulators}
-#'   \item{`r2`}{best r2 value for target genes}
-#'   \item{`models`}{regulator selection for each cluster}
-#'   \item{`signs`}{regulator signs for each cluster}
-#'   \item{`weights`}{average regulator coefficient for each cluster}
-#'   \item{`coeffs`}{list of regulator coefficient matrices for each cluster}
-#' }
+#' Use the scRegClust algorithm to determine gene modules and their
+#' regulatory programs from single-cell data.
 #'
 #' @param expression `p x n` matrix of pre-processed single cell expression
 #'                   data with `p` rows of genes and `n` columns of cells.
-#' @param genesymbols a vector of gene names corresponding to rows of
+#' @param genesymbols A vector of gene names corresponding to rows of
 #'                    `expression`. Has to be of length `p`.
-#' @param is_regulator an indicator vector, telling which rows in `expression`
+#' @param is_regulator An indicator vector, telling which rows in `expression`
 #'                     are candidate regulators. Has to be of length `p`.
-#' @param target_cluster_start is the start cluster assignment for the rows in
+#' @param target_cluster_start The start cluster assignment for the rows in
 #'                `expression` that correspond to target genes, i.e. those for
 #'                which `is_regulator == 0L`. Alternatively, an integer
 #'                indicating the number of clusters. An initial clustering is
 #'                performed on the cross-correlation matrix of targets and genes
 #'                on the first dataset after data splitting.
-#' @param penalization sparsity penalty controlling the amount of regulators
+#' @param penalization Sparsity penalty controlling the amount of regulators
 #'                     used for each cluster. Either a single positive number
 #'                     or a vector of positive numbers.
-#' @param sample_assignment a vector of sample assignment for each cell, can
+#' @param sample_assignment A vector of sample assignment for each cell, can
 #'                          be used to perform the data splitting with
 #'                          stratification. Has to be of length `n`.
 #'                          No stratification if `NULL` is supplied.
-#' @param split1_proportion the proportion to use for the first dataset during
+#' @param split1_proportion The proportion to use for the first dataset during
 #'                         data splitting. The proportion for the second
 #'                         dataset is `1 - split1_proportion`. If stratification
 #'                         with `sample_assignment` is used, then the proportion
 #'                         of each strata is controlled.
-#' @param total_proportion can be used to only use a proportion of the supplied
+#' @param total_proportion Can be used to only use a proportion of the supplied
 #'                         observations. The proportion of the first dataset
 #'                         during data splitting in relation to the full
 #'                         dataset will be
 #'                         `total_proportion * split1_proportion`.
-#' @param prior_indicator an indicator matrix (sparse or dense) of size q x q
+#' @param prior_indicator An indicator matrix (sparse or dense) of size `q x q`
 #'                        that indicates whether there is a known functional
 #'                        relationship between two genes. Ideally, this is
 #'                        supplied as a sparse matrix (`sparseMatrix`
 #'                        in the `Matrix` package). If not, then the matrix
 #'                        is converted to one.
-#' @param prior_genesymbols a vector of gene names of length q corresponding
+#' @param prior_genesymbols A vector of gene names of length q corresponding
 #'                          to the rows/columns in `prior_indicator`. Does not
 #'                          have to be the same as `genesymbols`, but only
 #'                          useful if there is overlap.
-#' @param prior_baseline positive baseline for the network prior. The larger
+#' @param prior_baseline A positive baseline for the network prior. The larger
 #'                       this parameter is, the less impact the network prior
 #'                       will have.
-#' @param prior_weight a number between 0 and 1 indicating the strength of the
+#' @param prior_weight A number between 0 and 1 indicating the strength of the
 #'                     prior in relation to the data. 0 ignores the prior and
 #'                     makes the algorithm completely data-driven. 1 uses only
 #'                     the prior during cluster allocation.
-#' @param min_cluster_size minimum required size of target genes for a cluster.
-#' @param allocate_per_obs whether cluster allocation should be performed for
+#' @param min_cluster_size Minimum required size of target genes in a cluster.
+#'                         Smaller clusters are emptied.
+#' @param allocate_per_obs Whether cluster allocation should be performed for
 #'                         each observation in the second data split separately.
-#'                         If FALSE, clusters are allocated on the aggregate
+#'                         If `FALSE`, clusters are allocated on the aggregate
 #'                         sum of squares across all observations in the
 #'                         second data split
-#' @param noise_threshold threshold for the best R2 of a target gene before
-#'                        it gets identified as noise.
-#' @param center whether or not genes should be centered
-#' @param n_cycles number of clustering cycles
-#' @param use_kmeanspp_init use kmeans++ for cluster initialization if
+#' @param noise_threshold Threshold for the best \eqn{R^2} of a target gene
+#'                        before it gets identified as noise.
+#' @param center Whether or not genes should be centered within each subgroup
+#'               defined in `sample_assignment`.
+#' @param n_cycles Number of maximum algorithmic cycles.
+#' @param use_kmeanspp_init Use kmeans++ for cluster initialization if
 #'                          `target_cluster_start` is a single integer;
 #'                          otherwise use kmeans with random initial cluster
 #'                          centers
-#' @param n_init_clusterings number of initial initialisation runs
-#' @param max_optim_iter maximum number of iterations during optimization
-#' @param compute_predictive_r2 whether to compute predictive R2 per cluster
-#'                              and regulator importance
-#' @param compute_silhouette whether to compute silhouette scores for each
-#'                           target gene
-#' @param verbose whether to print progress
+#' @param n_init_clusterings Number of kmeans(++) initialisation runs.
+#' @param max_optim_iter Maximum number of iterations during optimization
+#'                       in the coop-Lasso and NNLS steps.
+#' @param compute_predictive_r2 Whether to compute predictive \eqn{R^2} per
+#'                              cluster and regulator importance
+#' @param compute_silhouette Whether to compute silhouette scores for each
+#'                           target gene.
+#' @param verbose Whether to print progress.
 #'
-#' @return an object of S3 class `scregclust` containing
-#'   \item{penalization}{the supplied penalization argument}
-#'   \item{results}{a list of results, one for each supplied element in
-#'                  `penalization`. See details.}
-#'   \item{target_cluster_start}{initial clustering for target genes (i.e. those
-#'                               with `is_regulator == 0`)}
+#' @return A list with S3 class `scregclust` containing
+#'   \item{penalization}{The supplied `penalization` parameters}
+#'   \item{results}{A list of result lists (each with S3 class
+#'                  `scregclust_result`), one for each supplied `penalization`
+#'                  parameter. See below.}
+#'   \item{target_cluster_start}{Initial clustering for target genes,
+#'                               i.e. those with `is_regulator == 0`}
+#'
+#' For each supplied penalization parameter, `results` contains a list with
+#' * the current `penalization` parameter,
+#' * the supplied `genesymbols` after filtering (as used during fitting),
+#' * the supplied `is_regulator` vector after filtering (as used during
+#'   fitting),
+#' * the number of fitted clusters `n_cl`,
+#' * whether the current run `converged` to a single configuration (as a
+#'   boolean),
+#' * as well as an `output` object containing the numeric results for each
+#'   final configuration.
+#'
+#' It is possible that the algorithm ends in a cycle instead of a unique final
+#' configuration. Therefore, `output` is a list with each element itself being
+#' a list with the following contents:
+#' \describe{
+#'   \item{`reg_table`}{a regulator table, a matrix of weights for each
+#'                      regulator and cluster}
+#'   \item{`cluster`}{the cluster assignments for all genes (including
+#'                    regulators); regulators are placed in clusters with the
+#'                    highest accumulated correlation between target genes
+#'                    and regulators}
+#'   \item{`r2`}{best predictive \eqn{R^2} value for each target gene across
+#'               all clusters}
+#'   \item{`r2_cluster`}{a vector of predictive \eqn{R^2} values for each
+#'                       cluster (included if `compute_predictive_r2 == TRUE`)}
+#'   \item{`importance`}{a matrix of importance values for each regulator (rows)
+#'                       and cluster (columns) (included if
+#'                       `compute_predictive_r2 == TRUE`)}
+#'   \item{`r2_cross_cluster_per_target`}{a matrix of cross cluster \eqn{R^2}
+#'                                        values for each target gene (rows)
+#'                                        and each cluster (columns) (included
+#'                                        if `compute_silhouette == TRUE`)}
+#'   \item{`silhouette`}{a vector of silhouette scores for each target gene
+#'                       (included if `compute_silhouette == TRUE`)}
+#'   \item{`models`}{regulator selection for each cluster as a matrix with
+#'                   regulators in rows and clusters in columns}
+#'   \item{`signs`}{regulator signs for each cluster as a matrix with
+#'                  regulators in rows and clusters in columns}
+#'   \item{`weights`}{average regulator coefficient for each cluster}
+#'   \item{`coeffs`}{list of regulator coefficient matrices for each cluster
+#'                   as estimated in the coop-Lasso step}
+#' }
 #'
 #' @export
 scregclust <- function(expression,
@@ -1520,11 +1544,11 @@ scregclust <- function(expression,
         silhouette[[m]] <- sapply(seq_along(k), function(i) {
           c <- k[i]
           if (c != -1) {
-            b <- max(m[i, ][-c])
+            b <- max(r2_cross_cluster_per_target[[m]][i, ][-c])
             if (b < 0) {
               b <- 0
             }
-            a <- m[i, c]
+            a <- r2_cross_cluster_per_target[[m]][i, c]
             (a - b) / max(a, b)
           } else {
             NA

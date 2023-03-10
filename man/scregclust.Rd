@@ -2,7 +2,7 @@
 % Please edit documentation in R/scregclust.R
 \name{scregclust}
 \alias{scregclust}
-\title{Uncover gene modules and associated regulators from single cell data}
+\title{Uncover gene modules and their regulatory programs from single-cell data}
 \usage{
 scregclust(
   expression,
@@ -34,115 +34,121 @@ scregclust(
 \item{expression}{\verb{p x n} matrix of pre-processed single cell expression
 data with \code{p} rows of genes and \code{n} columns of cells.}
 
-\item{genesymbols}{a vector of gene names corresponding to rows of
+\item{genesymbols}{A vector of gene names corresponding to rows of
 \code{expression}. Has to be of length \code{p}.}
 
-\item{is_regulator}{an indicator vector, telling which rows in \code{expression}
+\item{is_regulator}{An indicator vector, telling which rows in \code{expression}
 are candidate regulators. Has to be of length \code{p}.}
 
-\item{target_cluster_start}{is the start cluster assignment for the rows in
+\item{target_cluster_start}{The start cluster assignment for the rows in
 \code{expression} that correspond to target genes, i.e. those for
 which \code{is_regulator == 0L}. Alternatively, an integer
 indicating the number of clusters. An initial clustering is
 performed on the cross-correlation matrix of targets and genes
 on the first dataset after data splitting.}
 
-\item{penalization}{sparsity penalty controlling the amount of regulators
+\item{penalization}{Sparsity penalty controlling the amount of regulators
 used for each cluster. Either a single positive number
 or a vector of positive numbers.}
 
-\item{sample_assignment}{a vector of sample assignment for each cell, can
+\item{sample_assignment}{A vector of sample assignment for each cell, can
 be used to perform the data splitting with
 stratification. Has to be of length \code{n}.
 No stratification if \code{NULL} is supplied.}
 
-\item{split1_proportion}{the proportion to use for the first dataset during
+\item{split1_proportion}{The proportion to use for the first dataset during
 data splitting. The proportion for the second
 dataset is \code{1 - split1_proportion}. If stratification
 with \code{sample_assignment} is used, then the proportion
 of each strata is controlled.}
 
-\item{total_proportion}{can be used to only use a proportion of the supplied
+\item{total_proportion}{Can be used to only use a proportion of the supplied
 observations. The proportion of the first dataset
 during data splitting in relation to the full
 dataset will be
 \code{total_proportion * split1_proportion}.}
 
-\item{prior_indicator}{an indicator matrix (sparse or dense) of size q x q
+\item{prior_indicator}{An indicator matrix (sparse or dense) of size \verb{q x q}
 that indicates whether there is a known functional
 relationship between two genes. Ideally, this is
 supplied as a sparse matrix (\code{sparseMatrix}
 in the \code{Matrix} package). If not, then the matrix
 is converted to one.}
 
-\item{prior_genesymbols}{a vector of gene names of length q corresponding
+\item{prior_genesymbols}{A vector of gene names of length q corresponding
 to the rows/columns in \code{prior_indicator}. Does not
 have to be the same as \code{genesymbols}, but only
 useful if there is overlap.}
 
-\item{prior_baseline}{positive baseline for the network prior. The larger
+\item{prior_baseline}{A positive baseline for the network prior. The larger
 this parameter is, the less impact the network prior
 will have.}
 
-\item{prior_weight}{a number between 0 and 1 indicating the strength of the
+\item{prior_weight}{A number between 0 and 1 indicating the strength of the
 prior in relation to the data. 0 ignores the prior and
 makes the algorithm completely data-driven. 1 uses only
 the prior during cluster allocation.}
 
-\item{min_cluster_size}{minimum required size of target genes for a cluster.}
+\item{min_cluster_size}{Minimum required size of target genes in a cluster.
+Smaller clusters are emptied.}
 
-\item{allocate_per_obs}{whether cluster allocation should be performed for
+\item{allocate_per_obs}{Whether cluster allocation should be performed for
 each observation in the second data split separately.
-If FALSE, clusters are allocated on the aggregate
+If \code{FALSE}, clusters are allocated on the aggregate
 sum of squares across all observations in the
 second data split}
 
-\item{noise_threshold}{threshold for the best R2 of a target gene before
-it gets identified as noise.}
+\item{noise_threshold}{Threshold for the best \eqn{R^2} of a target gene
+before it gets identified as noise.}
 
-\item{center}{whether or not genes should be centered}
+\item{center}{Whether or not genes should be centered within each subgroup
+defined in \code{sample_assignment}.}
 
-\item{n_cycles}{number of clustering cycles}
+\item{n_cycles}{Number of maximum algorithmic cycles.}
 
-\item{use_kmeanspp_init}{use kmeans++ for cluster initialization if
+\item{use_kmeanspp_init}{Use kmeans++ for cluster initialization if
 \code{target_cluster_start} is a single integer;
 otherwise use kmeans with random initial cluster
 centers}
 
-\item{n_init_clusterings}{number of initial initialisation runs}
+\item{n_init_clusterings}{Number of kmeans(++) initialisation runs.}
 
-\item{max_optim_iter}{maximum number of iterations during optimization}
+\item{max_optim_iter}{Maximum number of iterations during optimization
+in the coop-Lasso and NNLS steps.}
 
-\item{compute_predictive_r2}{whether to compute predictive R2 per cluster
-and regulator importance}
+\item{compute_predictive_r2}{Whether to compute predictive \eqn{R^2} per
+cluster and regulator importance}
 
-\item{compute_silhouette}{whether to compute silhouette scores for each
-target gene}
+\item{compute_silhouette}{Whether to compute silhouette scores for each
+target gene.}
 
-\item{verbose}{whether to print progress}
+\item{verbose}{Whether to print progress.}
 }
 \value{
-an object of S3 class \code{scregclust} containing
-\item{penalization}{the supplied penalization argument}
-\item{results}{a list of results, one for each supplied element in
-\code{penalization}. See details.}
-\item{target_cluster_start}{initial clustering for target genes (i.e. those
-with \code{is_regulator == 0})}
-}
-\description{
-Use the scRegClust algorithm to determine gene modules and associated
-regulatory programs from single cell data.
-}
-\details{
-The list of \code{results} returned by this function contain the following:
+A list with S3 class \code{scregclust} containing
+\item{penalization}{The supplied \code{penalization} parameters}
+\item{results}{A list of result lists (each with S3 class
+\code{scregclust_result}), one for each supplied \code{penalization}
+parameter. See below.}
+\item{target_cluster_start}{Initial clustering for target genes,
+i.e. those with \code{is_regulator == 0}}
 
-For each supplied penalization parameter, \code{results} contains one list
-which contains the current \code{penalization} parameter, the supplied
-\code{genesymbols} after filtering (as used during fitting), the supplied
-\code{is_regulator} vector after filtering (as used during fitting), as well as
-an \code{output} object. It is possible that the algorithm ends in a cycle
-instead of a unique final constellation. Therefore, \code{output} is a list
-with each element itself being a list with the following contents:
+For each supplied penalization parameter, \code{results} contains a list with
+\itemize{
+\item the current \code{penalization} parameter,
+\item the supplied \code{genesymbols} after filtering (as used during fitting),
+\item the supplied \code{is_regulator} vector after filtering (as used during
+fitting),
+\item the number of fitted clusters \code{n_cl},
+\item whether the current run \code{converged} to a single configuration (as a
+boolean),
+\item as well as an \code{output} object containing the numeric results for each
+final configuration.
+}
+
+It is possible that the algorithm ends in a cycle instead of a unique final
+configuration. Therefore, \code{output} is a list with each element itself being
+a list with the following contents:
 \describe{
 \item{\code{reg_table}}{a regulator table, a matrix of weights for each
 regulator and cluster}
@@ -150,10 +156,29 @@ regulator and cluster}
 regulators); regulators are placed in clusters with the
 highest accumulated correlation between target genes
 and regulators}
-\item{\code{r2}}{best r2 value for target genes}
-\item{\code{models}}{regulator selection for each cluster}
-\item{\code{signs}}{regulator signs for each cluster}
+\item{\code{r2}}{best predictive \eqn{R^2} value for each target gene across
+all clusters}
+\item{\code{r2_cluster}}{a vector of predictive \eqn{R^2} values for each
+cluster (included if \code{compute_predictive_r2 == TRUE})}
+\item{\code{importance}}{a matrix of importance values for each regulator (rows)
+and cluster (columns) (included if
+\code{compute_predictive_r2 == TRUE})}
+\item{\code{r2_cross_cluster_per_target}}{a matrix of cross cluster \eqn{R^2}
+values for each target gene (rows)
+and each cluster (columns) (included
+if \code{compute_silhouette == TRUE})}
+\item{\code{silhouette}}{a vector of silhouette scores for each target gene
+(included if \code{compute_silhouette == TRUE})}
+\item{\code{models}}{regulator selection for each cluster as a matrix with
+regulators in rows and clusters in columns}
+\item{\code{signs}}{regulator signs for each cluster as a matrix with
+regulators in rows and clusters in columns}
 \item{\code{weights}}{average regulator coefficient for each cluster}
-\item{\code{coeffs}}{list of regulator coefficient matrices for each cluster}
+\item{\code{coeffs}}{list of regulator coefficient matrices for each cluster
+as estimated in the coop-Lasso step}
 }
+}
+\description{
+Use the scRegClust algorithm to determine gene modules and their
+regulatory programs from single-cell data.
 }
