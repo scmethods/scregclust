@@ -1726,14 +1726,14 @@ format_scregclust <- function(fit) {
   str_widths <- sapply(pen_strs, nchar)
 
   cs_str_widths <- update_cs_str_widths(str_widths)
-  strs <- list(which(cs_str_widths <= width))
-  str_widths <- str_widths[cs_str_widths > width]
+  strs <- list(which(cs_str_widths < width))
+  str_widths <- str_widths[cs_str_widths >= width]
   while (length(str_widths) > 0) {
     cs_str_widths <- update_cs_str_widths(str_widths)
     strs <- c(strs, list(
-      max(strs[[length(strs)]]) + which(cs_str_widths <= width)
+      max(strs[[length(strs)]]) + which(cs_str_widths < width)
     ))
-    str_widths <- str_widths[cs_str_widths > width]
+    str_widths <- str_widths[cs_str_widths >= width]
   }
 
   pen_str <- paste(sapply(strs, function(idx) {
@@ -1778,14 +1778,14 @@ format_scregclust_output <- function(output) {
   str_widths <- sapply(nms, nchar)
 
   cs_str_widths <- update_cs_str_widths(str_widths)
-  strs <- list(which(cs_str_widths <= width))
-  str_widths <- str_widths[cs_str_widths > width]
+  strs <- list(which(cs_str_widths < width))
+  str_widths <- str_widths[cs_str_widths >= width]
   while (length(str_widths) > 0) {
     cs_str_widths <- update_cs_str_widths(str_widths)
     strs <- c(strs, list(
-      max(strs[[length(strs)]]) + which(cs_str_widths <= width)
+      max(strs[[length(strs)]]) + which(cs_str_widths < width)
     ))
-    str_widths <- str_widths[cs_str_widths > width]
+    str_widths <- str_widths[cs_str_widths >= width]
   }
 
   nms_str <- paste(sapply(strs, function(idx) {
