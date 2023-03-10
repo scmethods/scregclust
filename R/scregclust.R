@@ -78,10 +78,6 @@
 #'                         If FALSE, clusters are allocated on the aggregate
 #'                         sum of squares across all observations in the
 #'                         second data split
-#' @param cluster_inertia a target gene can only change its cluster assignment
-#'                        if `>= cluster_inertia` more observations in
-#'                        the second split vote for the new cluster compared
-#'                        to the old cluster
 #' @param noise_threshold threshold for the best R2 of a target gene before
 #'                        it gets identified as noise.
 #' @param center whether or not genes should be centered
@@ -120,7 +116,6 @@ scregclust <- function(expression,
                        prior_weight = 0.5,
                        min_cluster_size = 0L,
                        allocate_per_obs = TRUE,
-                       cluster_inertia = 0,
                        noise_threshold = 0.025,
                        center = TRUE,
                        n_cycles = 50L,
@@ -451,38 +446,6 @@ scregclust <- function(expression,
     )
   } else {
     allocate_per_obs <- allocate_per_obs
-  }
-
-  if (!(
-    is.numeric(cluster_inertia)
-    && length(cluster_inertia) == 1
-    && 0 <= cluster_inertia
-    && cluster_inertia <= 1
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
-    }
-    cli::cli_abort(paste(
-      "{.var cluster_inertia} needs to be a number between",
-      "0 (inclusive) and 1 (inclusive)."
-    ))
-  } else {
-    if (cluster_inertia > 0 && !allocate_per_obs) {
-      if (verbose && cl) {
-        cat("\n")
-        cl <- FALSE
-      }
-      cli::cli_alert_warning(
-        paste(
-          "{.var allocate_per_obs} needs to be {.code TRUE} for",
-          "{.var cluster_ineratia} to have an effect."
-        )
-      )
-      cli::cli_alert_info("{.var allocate_per_obs} is {allocate_per_obs}")
-      cli::cli_alert_info("{.var cluster_inertia} is {cluster_inertia}")
-    }
-    cluster_inertia <- as.double(cluster_inertia)
   }
 
   if (!(

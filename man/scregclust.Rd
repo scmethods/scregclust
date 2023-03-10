@@ -19,7 +19,6 @@ scregclust(
   prior_weight = 0.5,
   min_cluster_size = 0L,
   allocate_per_obs = TRUE,
-  cluster_inertia = 0,
   noise_threshold = 0.025,
   center = TRUE,
   n_cycles = 50L,
@@ -97,11 +96,6 @@ each observation in the second data split separately.
 If FALSE, clusters are allocated on the aggregate
 sum of squares across all observations in the
 second data split}
-
-\item{cluster_inertia}{a target gene can only change its cluster assignment
-if \verb{>= cluster_inertia} more observations in
-the second split vote for the new cluster compared
-to the old cluster}
 
 \item{noise_threshold}{threshold for the best R2 of a target gene before
 it gets identified as noise.}
