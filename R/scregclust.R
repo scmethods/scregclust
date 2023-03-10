@@ -1713,6 +1713,33 @@ print.scregclust_result <- function(x, ...) {
 }
 
 format_scregclust <- function(fit) {
+  update_cs_str_widths <- function(str_widths) {
+    if (length(str_widths) == 1) {
+      str_widths[1]
+    } else {
+      cumsum(str_widths + c(0, rep(2, length(str_widths) - 1)))
+    }
+  }
+
+  width <- cli::console_width()
+  pen_strs <- as.character(fit$penalization)
+  str_widths <- sapply(pen_strs, nchar)
+
+  cs_str_widths <- update_cs_str_widths(str_widths)
+  strs <- list(which(cs_str_widths <= width))
+  str_widths <- str_widths[cs_str_widths > width]
+  while (length(str_widths) > 0) {
+    cs_str_widths <- update_cs_str_widths(str_widths)
+    strs <- c(strs, list(
+      max(strs[[length(strs)]]) + which(cs_str_widths <= width)
+    ))
+    str_widths <- str_widths[cs_str_widths > width]
+  }
+
+  pen_str <- paste(sapply(strs, function(idx) {
+    paste(pen_strs[idx], collapse = ", ")
+  }), collapse = ",\n")
+
   paste0(
     cli::col_grey("# scRegClust fit object"),
     "\n\n",
@@ -1722,8 +1749,7 @@ format_scregclust <- function(fit) {
     cli::col_grey("# Penalization parameters:"),
     "\n",
     cli::col_grey("# "),
-    # TODO: Account for terminal width
-    cli::col_blue(paste(fit$penalization, collapse = ", "))
+    cli::col_blue(pen_str)
   )
 }
 
