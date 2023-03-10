@@ -1764,8 +1764,33 @@ print.scregclust <- function(x, ...) {
 }
 
 format_scregclust_output <- function(output) {
+  update_cs_str_widths <- function(str_widths) {
+    if (length(str_widths) == 1) {
+      str_widths[1]
+    } else {
+      cumsum(str_widths + c(0, rep(2, length(str_widths) - 1)))
+    }
+  }
+
+  width <- cli::console_width()
   nms <- names(output)
   nms <- nms[!sapply(output, is.null)]
+  str_widths <- sapply(nms, nchar)
+
+  cs_str_widths <- update_cs_str_widths(str_widths)
+  strs <- list(which(cs_str_widths <= width))
+  str_widths <- str_widths[cs_str_widths > width]
+  while (length(str_widths) > 0) {
+    cs_str_widths <- update_cs_str_widths(str_widths)
+    strs <- c(strs, list(
+      max(strs[[length(strs)]]) + which(cs_str_widths <= width)
+    ))
+    str_widths <- str_widths[cs_str_widths > width]
+  }
+
+  nms_str <- paste(sapply(strs, function(idx) {
+    paste(nms[idx], collapse = ", ")
+  }), collapse = ",\n")
 
   paste0(
     cli::col_grey("# scRegClust output object"),
@@ -1773,8 +1798,7 @@ format_scregclust_output <- function(output) {
     cli::col_grey("# Contains: "),
     "\n",
     cli::col_grey("# "),
-    # TODO: Account for terminal width
-    cli::col_blue(paste(nms, collapse = ", "))
+    cli::col_blue(nms_str)
   )
 }
 
