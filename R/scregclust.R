@@ -1255,13 +1255,7 @@ scregclust <- function(expression,
           scale(z2_target_scaled, center = TRUE, scale = FALSE)^2
         )
       )
-      r2_test_adj <- (
-        1 - t(t((1 - r2_test)) * (
-          (nrow(z2_target_scaled) - 1)
-          / (nrow(z2_target_scaled) - colSums(models))
-        ))
-      )
-      best_r2[[cycle]] <- apply(r2_test_adj, 1, max)
+      best_r2[[cycle]] <- apply(r2_test, 1, max)
 
       resid_var <- t(
         t(sum_squares_train)
