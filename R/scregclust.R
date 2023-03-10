@@ -94,7 +94,8 @@
 #' @param max_optim_iter maximum number of iterations during optimization
 #' @param compute_predictive_r2 whether to compute predictive R2 per cluster
 #'                              and regulator importance
-#' @param compute_cross_cluster_r2 whether to compute cross cluster R2
+#' @param compute_silhouette whether to compute silhouette scores for each
+#'                           target gene
 #' @param verbose whether to print progress
 #'
 #' @return an object of S3 class `scregclust` containing
@@ -127,7 +128,7 @@ scregclust <- function(expression,
                        n_init_clusterings = 50L,
                        max_optim_iter = 10000L,
                        compute_predictive_r2 = TRUE,
-                       compute_cross_cluster_r2 = FALSE,
+                       compute_silhouette = FALSE,
                        verbose = TRUE) {
   ###############################
   # START input validation
@@ -594,18 +595,18 @@ scregclust <- function(expression,
   }
 
   if (!(
-    is.logical(compute_cross_cluster_r2)
-    && length(compute_cross_cluster_r2) == 1
+    is.logical(compute_silhouette)
+    && length(compute_silhouette) == 1
   )) {
     if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
     cli::cli_abort(
-      "{.var compute_cross_cluster_r2} needs to be TRUE or FALSE."
+      "{.var compute_silhouette} needs to be TRUE or FALSE."
     )
   } else {
-    compute_cross_cluster_r2 <- compute_cross_cluster_r2
+    compute_silhouette <- compute_silhouette
   }
 
   if (!(
@@ -1414,27 +1415,19 @@ scregclust <- function(expression,
     cluster <- vector("list", final_cycle_length)
     r2 <- vector("list", final_cycle_length)
     reg_table <- vector("list", final_cycle_length)
-    r2_imp <- vector("list", final_cycle_length)
-    r2_imp_adj <- vector("list", final_cycle_length)
+    r2_removed <- vector("list", final_cycle_length)
     r2_cluster <- vector("list", final_cycle_length)
-    r2_cluster_adj <- vector("list", final_cycle_length)
     importance <- vector("list", final_cycle_length)
-    importance_adj <- vector("list", final_cycle_length)
-    r2_cross_cluster <- vector("list", final_cycle_length)
     r2_cross_cluster_per_target <- vector("list", final_cycle_length)
+    silhouette <- vector("list", final_cycle_length)
 
     for (m in seq_len(final_cycle_length)) {
       k <- k_history[[length(k_history) - m + 1L]]
 
       if (compute_predictive_r2) {
-        r2_imp[[m]] <- vector("list", n_cl)
-        r2_imp_adj[[m]] <- vector("list", n_cl)
+        r2_removed[[m]] <- vector("list", n_cl)
         r2_cluster[[m]] <- rep(NA_real_, n_cl)
-        r2_cluster_adj[[m]] <- rep(NA_real_, n_cl)
         importance[[m]] <- matrix(
-          NA_real_, nrow = sum(is_regulator), ncol = n_cl
-        )
-        importance_adj[[m]] <- matrix(
           NA_real_, nrow = sum(is_regulator), ncol = n_cl
         )
 
@@ -1475,16 +1468,14 @@ scregclust <- function(expression,
                 eps = 1e-8, max_iter = max_optim_iter
               )$beta * signs_cl
 
-              residuals_test_nnls <- (
+              ssq[, r] <- colSums((
                 z2_target_scaled[, target_cl, drop = FALSE]
                 - z2_reg_scaled_cl %*% beta_hat_nnls
-              )
-
-              ssq[, r] <- colSums(residuals_test_nnls^2)
+              )^2)
             }
 
             # Compute R2
-            r2_imp_vec <- 1 - (
+            r2_removed_vec <- 1 - (
               colSums(ssq) / sum(scale(
                 z2_target_scaled[, target_cl, drop = FALSE],
                 center = TRUE,
@@ -1492,77 +1483,31 @@ scregclust <- function(expression,
               )^2)
             )
 
-            r2_imp[[m]][[j]] <- 1 - t(
+            r2_removed[[m]][[j]] <- 1 - t(
               t(ssq) / colSums(scale(
                   z2_target_scaled[, target_cl, drop = FALSE],
                   center = TRUE,
                   scale = FALSE
               )^2)
             )
-            colnames(r2_imp[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
-            rownames(r2_imp[[m]][[j]]) <- genesymbols_target[target_cl]
-
-            # Compute adjusted R2
-            r2_imp_adj_vec <- vector("double", length(r2_imp_vec))
-            r2_imp_adj_vec[1] <- (
-              1 - (1 - r2_imp_vec[1]) * (
-                (length(target_cl) * nrow(z2_target_scaled) - 1)
-                / (
-                  length(target_cl) * nrow(z2_target_scaled)
-                  - sum(models[, j])
-                )
-              )
-            )
-            r2_imp_adj_vec[2L:(length(reg_cl) + 1L)] <- (
-              1 - (1 - r2_imp_vec[2L:(length(reg_cl) + 1L)]) * (
-                (length(target_cl) * nrow(z2_target_scaled) - 1)
-                / (
-                  length(target_cl) * nrow(z2_target_scaled)
-                  - sum(models[, j]) + 1
-                )
-              )
-            )
-
-            r2_imp_adj[[m]][[j]] <- matrix(
-              NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1L
-            )
-            r2_imp_adj[[m]][[j]][, 1] <- (
-              1 - (1 - r2_imp[[m]][[j]][, 1]) * (
-                (nrow(z2_target_scaled) - 1)
-                / (nrow(z2_target_scaled) - sum(models[, j]))
-              )
-            )
-            r2_imp_adj[[m]][[j]][, 2L:(length(reg_cl) + 1L)] <- (
-              1 - (1 - r2_imp[[m]][[j]][, 2L:(length(reg_cl) + 1L)]) * (
-                (nrow(z2_target_scaled) - 1)
-                / (nrow(z2_target_scaled) - sum(models[, j]) + 1)
-              )
-            )
-            colnames(r2_imp_adj[[m]][[j]]) <- c("All", genesymbols_reg[reg_cl])
-            rownames(r2_imp_adj[[m]][[j]]) <- genesymbols_target[target_cl]
+            colnames(r2_removed[[m]][[j]]) <- c("None", genesymbols_reg[reg_cl])
+            rownames(r2_removed[[m]][[j]]) <- genesymbols_target[target_cl]
 
             # Save cluster specific R2
-            r2_cluster[[m]][j] <- r2_imp_vec[1]
-            r2_cluster_adj[[m]][j] <- r2_imp_adj_vec[1]
+            r2_cluster[[m]][j] <- r2_removed_vec[1]
 
             # Compute importances
             importance[[m]][reg_cl, j] <- (
               1 - (
-                r2_imp_vec[2L:(length(reg_cl) + 1L)]
+                r2_removed_vec[2L:(length(reg_cl) + 1L)]
                 / r2_cluster[[m]][j]
-              )
-            )
-            importance_adj[[m]][reg_cl, j] <- (
-              1 - (
-                r2_imp_adj_vec[2L:(length(reg_cl) + 1L)]
-                / r2_cluster_adj[[m]][j]
               )
             )
           }
         }
       }
 
-      if (compute_cross_cluster_r2) {
+      if (compute_silhouette) {
         # Compute cross-cluster R2
         sum_squares_test <- matrix(
           rep.int(colSums(z2_target_scaled^2), n_cl),
@@ -1595,30 +1540,9 @@ scregclust <- function(expression,
               eps = 1e-8, max_iter = max_optim_iter
             )$beta * signs_cl
 
-            sum_squares_test[, j] <- colSums((
-              z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
-            )^2)
-          }
-        }
-
-        r2_cross_cluster[[m]] <- matrix(0, nrow = n_cl, ncol = n_cl)
-
-        for (j in seq_len(n_cl)) {
-          target_cl <- which(k == j)
-          denom <- sum(scale(
-            z2_target_scaled[, target_cl, drop = FALSE],
-            center = TRUE,
-            scale = FALSE
-          )^2)
-          # If there are no target genes in the cluster then denom == 0
-          # and the R2 becomes NaN. So leave it at 0 in this case since there
-          # is nothing to predict and its not relevant.
-          if (length(target_cl) > 0) {
-            for (i in seq_len(n_cl)) {
-              r2_cross_cluster[[m]][j, ] <- (
-                1 - colSums(sum_squares_test[target_cl, , drop = FALSE]) / denom
-              )
-            }
+            sum_squares_test[, j] <- colSums(
+              (z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls)^2
+            )
           }
         }
 
@@ -1629,6 +1553,20 @@ scregclust <- function(expression,
             scale = FALSE
           )^2)
         )
+
+        silhouette[[m]] <- sapply(seq_along(k), function(i) {
+          c <- k[i]
+          if (c != -1) {
+            b <- max(m[i, ][-c])
+            if (b < 0) {
+              b <- 0
+            }
+            a <- m[i, c]
+            (a - b) / max(a, b)
+          } else {
+            NA
+          }
+        })
       }
 
       # "Hack" to put regulators in tentative cluster
@@ -1696,23 +1634,19 @@ scregclust <- function(expression,
       n_cl = n_cl,
       converged = converged,
       output = lapply(seq_len(final_cycle_length), function(m) {
-        list(
+        structure(list(
           reg_table = reg_table[[m]],
           cluster = cluster[[m]],
           r2 = r2[[m]],
-          r2_imp = r2_imp[[m]],
-          r2_imp_adj = r2_imp_adj[[m]],
           r2_cluster = r2_cluster[[m]],
-          r2_cluster_adj = r2_cluster_adj[[m]],
-          r2_cross_cluster = r2_cross_cluster[[m]],
-          r2_cross_cluster_per_target = r2_cross_cluster_per_target[[m]],
           importance = importance[[m]],
-          importance_adj = importance_adj[[m]],
+          r2_cross_cluster_per_target = r2_cross_cluster_per_target[[m]],
+          silhouette = silhouette[[m]],
           models = models_final[[m]],
           signs = signs_final[[m]],
           weights = weights_final[[m]],
           coeffs = coeffs_final[[m]]
-        )
+        ), class = "scregclust_output")
       })
     ), class = "scregclust_result")
   }
@@ -1781,13 +1715,14 @@ print.scregclust_result <- function(x, ...) {
 format_scregclust <- function(fit) {
   paste0(
     cli::col_grey("# scRegClust fit object"),
-    "\n",
+    "\n\n",
     cli::col_grey("# Clusters: "),
     cli::col_blue(fit$results[[1]]$n_cl),
     "\n",
     cli::col_grey("# Penalization parameters:"),
     "\n",
     cli::col_grey("# "),
+    # TODO: Account for terminal width
     cli::col_blue(paste(fit$penalization, collapse = ", "))
   )
 }
@@ -1800,6 +1735,31 @@ format.scregclust <- function(x, ...) {
 #' @export
 print.scregclust <- function(x, ...) {
   cat(format_scregclust(x), "\n")
+}
+
+format_scregclust_output <- function(output) {
+  nms <- names(output)
+  nms <- nms[!sapply(output, is.null)]
+
+  paste0(
+    cli::col_grey("# scRegClust output object"),
+    "\n\n",
+    cli::col_grey("# Contains: "),
+    "\n",
+    cli::col_grey("# "),
+    # TODO: Account for terminal width
+    cli::col_blue(paste(nms, collapse = ", "))
+  )
+}
+
+#' @export
+format.scregclust_output <- function(x, ...) {
+  cli::ansi_strip(format_scregclust_output(x))
+}
+
+#' @export
+print.scregclust_output <- function(x, ...) {
+  cat(format_scregclust_output(x), "\n")
 }
 
 #' Split Sample
