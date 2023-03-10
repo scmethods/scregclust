@@ -27,7 +27,7 @@ scregclust(
   n_init_clusterings = 50L,
   max_optim_iter = 10000L,
   compute_predictive_r2 = TRUE,
-  compute_cross_cluster_r2 = FALSE,
+  compute_silhouette = FALSE,
   verbose = TRUE
 )
 }
@@ -122,7 +122,8 @@ centers}
 \item{compute_predictive_r2}{whether to compute predictive R2 per cluster
 and regulator importance}
 
-\item{compute_cross_cluster_r2}{whether to compute cross cluster R2}
+\item{compute_silhouette}{whether to compute silhouette scores for each
+target gene}
 
 \item{verbose}{whether to print progress}
 }
