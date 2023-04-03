@@ -15,7 +15,7 @@ Rcpp::IntegerVector allocate_clusters(SEXP resid_array,
 	int* dims = INTEGER(PROTECT(Rf_getAttrib(resid_array, R_DimSymbol)));
 	const auto n_cl = static_cast<Eigen::Index>(dims[0]);
 	const auto n_obs = static_cast<Eigen::Index>(dims[1]);
-	const auto n_genes = static_cast<Eigen::Index>(dims[2]);
+	// const auto n_genes = static_cast<Eigen::Index>(dims[2]);
 	UNPROTECT(1);
 
 	const auto n_total = n_cl * n_obs;

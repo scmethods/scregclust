@@ -126,8 +126,8 @@ plot_regulator_network <- function(fit,
 }
 
 #' @export
-plot.scregclust <- function(fit, ...) {
-  r2_cluster_data <- do.call(rbind, lapply(fit$results, function(r) {
+plot.scregclust <- function(x, ...) {
+  r2_cluster_data <- do.call(rbind, lapply(x$results, function(r) {
     do.call(rbind, lapply(r$output, function(o) {
       idx <- !is.na(o$r2_cluster)
 
@@ -139,11 +139,11 @@ plot.scregclust <- function(fit, ...) {
     }))
   }))
   r2_cluster_data$penalization <- factor(
-    r2_cluster_data$penalization, levels = fit$penalization
+    r2_cluster_data$penalization, levels = x$penalization
   )
   r2_cluster_data$variable <- "r2-per-cluster"
 
-  importance_data <- do.call(rbind, lapply(fit$results, function(r) {
+  importance_data <- do.call(rbind, lapply(x$results, function(r) {
     do.call(rbind, lapply(seq_along(r$output), function(j) {
       o <- r$output[[j]]
       do.call(rbind, lapply(seq_len(ncol(o$models)), function(i) {
@@ -161,20 +161,20 @@ plot.scregclust <- function(fit, ...) {
     }))
   }))
   importance_data$penalization <- factor(
-    importance_data$penalization, levels = fit$penalization
+    importance_data$penalization, levels = x$penalization
   )
   importance_data$variable <- "importance"
 
   rbind(r2_cluster_data, importance_data) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
-      variable ~ .,
+      ggplot2::vars(.data$variable),
       nrow = 2,
       scales = "free_y",
       strip.position = "left",
       labeller = ggplot2::label_bquote(
         .(
-          if (variable == "importance") {
+          if (.data$variable == "importance") {
             "Regulator Importance"
           } else {
             "Predictive" ~ R^2 ~ "per module"
@@ -183,7 +183,7 @@ plot.scregclust <- function(fit, ...) {
       ),
     ) +
     ggplot2::geom_boxplot(
-      ggplot2::aes(x = penalization, y = value),
+      ggplot2::aes(x = .data$penalization, y = .data$value),
       outlier.size = 0.5,
       lwd = 0.25,
     ) +
@@ -358,15 +358,15 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     ggplot2::ggplot() +
     ggplot2::facet_wrap(n_cl_lbl ~ .) +
     ggplot2::geom_bar(
-      ggplot2::aes(x = order, y = silhouette, fill = cluster),
+      ggplot2::aes(x = .data$order, y = .data$silhouette, fill = .data$cluster),
       stat = "identity",
     ) +
     ggplot2::geom_text(
-      aes(x = order, y = -0.1, label = cluster),
+      ggplot2::aes(x = .data$order, y = -0.1, label = .data$cluster),
       data = cluster_centers,
     ) +
     ggplot2::geom_hline(
-      aes(yintercept = silhouette),
+      ggplot2::aes(yintercept = .data$silhouette),
       data = avg_silhouette,
       linetype = "dashed",
       color = "red",
@@ -483,13 +483,13 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
   ) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
-      variable ~ .,
+      ggplot2::vars(.data$variable),
       nrow = 2,
       scales = "free_y",
       strip.position = "left",
       labeller = ggplot2::label_bquote(
         .(
-          if (variable == "avg-silhouette") {
+          if (.data$variable == "avg-silhouette") {
             "Average silhouette score"
           } else {
             "Avg. pred." ~ R^2 ~ "per module"
@@ -497,8 +497,12 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
         )
       ),
     ) +
-    ggplot2::geom_line(ggplot2::aes(n_cl, avg_silhouette), linewidth = 0.25) +
-    ggplot2::geom_point(ggplot2::aes(n_cl, avg_silhouette), size = 0.5) +
+    ggplot2::geom_line(
+      ggplot2::aes(.data$n_cl, .data$avg_silhouette), linewidth = 0.25
+    ) +
+    ggplot2::geom_point(
+      ggplot2::aes(.data$n_cl, .data$avg_silhouette), size = 0.5
+    ) +
     ggplot2::labs(x = "# of modules (K)", y = NULL) +
     ggplot2::scale_x_continuous(breaks = cluster_counts) +
     ggplot2::theme_minimal() +

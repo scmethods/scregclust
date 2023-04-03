@@ -1,3 +1,4 @@
 ^datasets$
 ^scripts$
 ^LICENSE\.md$
+^compile_flags.txt$
