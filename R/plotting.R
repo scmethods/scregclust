@@ -1,6 +1,7 @@
 #' Plotting the regulatory table from scregclust as a directed graph
 #'
-#' @param fit Output list from scregclust
+#' @param output Object of type `scregclust_output` from a fit of the
+#'               scregclust algorithm.
 #' @param arrow_size Size of arrow head
 #' @param edge_scaling Scaling factor for edge width
 #' @param no_links Threshold value (0-10) for number of edges to show,
@@ -10,7 +11,7 @@
 #' @return Graph with gene modules and regulators as nodes
 #'
 #' @export
-plot_regulator_network <- function(fit,
+plot_regulator_network <- function(output,
                                    arrow_size = 0.3,
                                    edge_scaling = 30,
                                    no_links = 6,
@@ -30,8 +31,8 @@ plot_regulator_network <- function(fit,
                                     "#9D7DB2",
                                     "#94A5BF"
                                   )) {
-  REGtable <- fit[[1]]
-  idx <- which(is.na(colSums(fit[[1]])))
+  REGtable <- output$reg_table
+  idx <- which(is.na(colSums(REGtable)))
   REGtable <- REGtable[, -idx]
 
   regulators <- c()
@@ -498,10 +499,10 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
       ),
     ) +
     ggplot2::geom_line(
-      ggplot2::aes(.data$n_cl, .data$avg_silhouette), linewidth = 0.25
+      ggplot2::aes(.data$n_cl, .data$value), linewidth = 0.25
     ) +
     ggplot2::geom_point(
-      ggplot2::aes(.data$n_cl, .data$avg_silhouette), size = 0.5
+      ggplot2::aes(.data$n_cl, .data$value), size = 0.5
     ) +
     ggplot2::labs(x = "# of modules (K)", y = NULL) +
     ggplot2::scale_x_continuous(breaks = cluster_counts) +
