@@ -32,8 +32,8 @@ plot_regulator_network <- function(output,
                                     "#94A5BF"
                                   )) {
   REGtable <- output$reg_table
-  idx <- which(is.na(colSums(REGtable)))
-  REGtable <- REGtable[, -idx]
+  idx <- !is.na(colSums(REGtable))
+  REGtable <- REGtable[, idx]
 
   regulators <- c()
   for (i in seq_len(ncol(REGtable))) {
@@ -48,7 +48,10 @@ plot_regulator_network <- function(output,
   f <- which(rownames(REGtable) %in% regulators)
   REGtable <- REGtable[f, ]
 
-  links <- reshape::melt(as.matrix(REGtable))
+  REGtable$regulator <- rownames(REGtable)
+  rownames(REGtable) <- NULL
+
+  links <- reshape::melt(REGtable, id.vars = "regulator")
   colnames(links) <- c("from", "to", "weight")
   f <- which(links$weight == 0)
   links <- links[-f, ]
@@ -66,6 +69,9 @@ plot_regulator_network <- function(output,
 
   links <- as.data.frame(links)
 
+  rownames(REGtable) <- REGtable$regulator
+  REGtable <- REGtable[, -ncol(REGtable)]
+
   nodes <- array(0, dim = c((nrow(REGtable) + ncol(REGtable)), 2))
   colnames(nodes) <- c("id", "type")
 
@@ -79,11 +85,11 @@ plot_regulator_network <- function(output,
     d = links, vertices = nodes, directed = TRUE
   )
 
-  igraph::V(net)$shape[which(igraph::V(net)$type == "Regulator")] <- 1
-  igraph::V(net)$shape[which(igraph::V(net)$type == "TargetState")] <- 2
+  igraph::V(net)[which(igraph::V(net)$type == "Regulator")]$shape <- 1
+  igraph::V(net)[which(igraph::V(net)$type == "TargetState")]$shape <- 2
 
-  igraph::V(net)$type[which(igraph::V(net)$type == "Regulator")] <- 1
-  igraph::V(net)$type[which(igraph::V(net)$type == "TargetState")] <- (
+  igraph::V(net)[which(igraph::V(net)$type == "Regulator")]$type <- 1
+  igraph::V(net)[which(igraph::V(net)$type == "TargetState")]$type <- (
     seq_len(ncol(REGtable))
   )
 
@@ -113,8 +119,8 @@ plot_regulator_network <- function(output,
     alpha = 0.5
   )
   legend(
-    x = -1.5,
-    y = -1.1,
+    x = -1.1,
+    y = -0.8,
     c("Activating", "Repressing"),
     pch = 21,
     col = "#777777",
@@ -169,13 +175,13 @@ plot.scregclust <- function(x, ...) {
   rbind(r2_cluster_data, importance_data) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
-      ggplot2::vars(.data$variable),
+      variable ~ .,
       nrow = 2,
       scales = "free_y",
       strip.position = "left",
       labeller = ggplot2::label_bquote(
         .(
-          if (.data$variable == "importance") {
+          if (variable == "importance") {
             "Regulator Importance"
           } else {
             "Predictive" ~ R^2 ~ "per module"
@@ -211,7 +217,11 @@ collect_silhouette_data <- function(list_of_fits) {
         k <- o$cluster[!r$is_regulator]
 
         order_list <- lapply(seq_len(r$n_cl), function(cl) {
-          order(o$silhouette[k == cl])
+          if (sum(k == cl) > 0) {
+            order(o$silhouette[k == cl])
+          } else {
+            integer(0)
+          }
         })
         gene <- do.call(c, lapply(seq_len(r$n_cl), function(cl) {
           seq_along(k)[k == cl][order_list[[cl]]]
@@ -242,7 +252,7 @@ collect_silhouette_data <- function(list_of_fits) {
 #'                     Either a single number to be used for all fits in
 #'                     `list_of_fits`, or one for each individual fit.
 #'
-#' @return A [ggplot2] plot showing the the silhouette scores for each
+#' @return A [`ggplot2`] plot showing the the silhouette scores for each
 #'         supplied fit.
 #' @export
 plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
@@ -484,13 +494,13 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
   ) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
-      ggplot2::vars(.data$variable),
+      variable ~ .,
       nrow = 2,
       scales = "free_y",
       strip.position = "left",
       labeller = ggplot2::label_bquote(
         .(
-          if (.data$variable == "avg-silhouette") {
+          if (variable == "avg-silhouette") {
             "Average silhouette score"
           } else {
             "Avg. pred." ~ R^2 ~ "per module"

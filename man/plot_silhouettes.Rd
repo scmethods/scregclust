@@ -19,7 +19,7 @@ Either a single number to be used for all fits in
 \code{list_of_fits}, or one for each individual fit.}
 }
 \value{
-A \link{ggplot2} plot showing the the silhouette scores for each
+A \code{\link{ggplot2}} plot showing the the silhouette scores for each
 supplied fit.
 }
 \description{

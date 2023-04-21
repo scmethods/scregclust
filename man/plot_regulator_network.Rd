@@ -5,7 +5,7 @@
 \title{Plotting the regulatory table from scregclust as a directed graph}
 \usage{
 plot_regulator_network(
-  fit,
+  output,
   arrow_size = 0.3,
   edge_scaling = 30,
   no_links = 6,
@@ -14,7 +14,8 @@ plot_regulator_network(
 )
 }
 \arguments{
-\item{fit}{Output list from scregclust}
+\item{output}{Object of type \code{scregclust_output} from a fit of the
+scregclust algorithm.}
 
 \item{arrow_size}{Size of arrow head}
 
