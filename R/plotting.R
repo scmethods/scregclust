@@ -364,6 +364,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
       mean(df$silhouette)
     })
   )
+  avg_silhouette$n_cl_lbl <- as.factor(sprintf("K = %d", avg_silhouette$n_cl))
 
   silhouette_data |>
     ggplot2::ggplot() +
