@@ -356,6 +356,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
       })
     )
   }))
+  cluster_centers$n_cl_lbl <- as.factor(sprintf("K = %d", cluster_centers$n_cl))
 
   avg_silhouette <- data.frame(
     n_cl = cluster_counts,
