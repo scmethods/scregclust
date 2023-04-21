@@ -442,10 +442,19 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
         r$output[[j]]$r2_cluster
       })) # average across different configurations
 
+      # If a cluster is empty then r2_cluster is NA, so use NA remove
+      value <- mean(r2_cluster, na.rm = TRUE)
+      # If all clusters turn out to be empty (e.g. too high penalization) then
+      # mean(...) above will evaluate to NaN. Do not return a data.frame
+      # in that case.
+      if (is.nan(value)) {
+        return(NULL)
+      }
+
       data.frame(
         n_cl = r$n_cl,
         penalization = r$penalization,
-        value = mean(r2_cluster),
+        value = value,
         variable = "avg-r2-cluster"
       )
     }))
