@@ -1079,7 +1079,7 @@ scregclust <- function(expression,
 
             models[, j] <- rowSums(abs(beta) > 0) > 0
             weights[, j] <- rowMeans(beta)
-            signs[, j] <- sign(weights[, j])
+            signs[models[, j], j] <- sign(weights[models[, j], j])
 
             if (last_cycle) {
               coeffs_final[[m]][[j]] <- beta
