@@ -8,6 +8,7 @@ split_sample(
   z,
   stratification,
   is_regulator,
+  split_indices,
   split1_proportion,
   total_proportion,
   center
@@ -21,6 +22,8 @@ of length \code{ncol(z)}}
 
 \item{is_regulator}{an indicator vector, telling which rows in \code{z} are
 candidate regulators}
+
+\item{split_indices}{a vector of given split indices. can be \code{NULL}}
 
 \item{split1_proportion}{proportion to include in first data split}
 

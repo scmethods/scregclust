@@ -9,19 +9,26 @@
 #'                    `expression`. Has to be of length `p`.
 #' @param is_regulator An indicator vector, telling which rows in `expression`
 #'                     are candidate regulators. Has to be of length `p`.
-#' @param target_cluster_start The start cluster assignment for the rows in
-#'                `expression` that correspond to target genes, i.e. those for
-#'                which `is_regulator == 0L`. Alternatively, an integer
-#'                indicating the number of clusters. An initial clustering is
-#'                performed on the cross-correlation matrix of targets and genes
-#'                on the first dataset after data splitting.
 #' @param penalization Sparsity penalty controlling the amount of regulators
 #'                     used for each cluster. Either a single positive number
 #'                     or a vector of positive numbers.
+#' @param n_cl Requested number of clusters (integer).
+#'             If this is provided without specifying `target_cluster_start`,
+#'             then an initial clustering is performed on the cross-correlation
+#'             matrix of targets and genes on the first dataset after
+#'             data splitting.
+#' @param target_cluster_start The start cluster assignment for the rows in
+#'                `expression` that correspond to target genes, i.e. those for
+#'                which `is_regulator == 0L`. If this is not specified, then
+#'                see `n_cl` regarding cluster initialization.
+#'                If this is provided then `use_kmeanspp_init` and
+#'                `n_init_clusterings` are ignored.
 #' @param sample_assignment A vector of sample assignment for each cell, can
 #'                          be used to perform the data splitting with
 #'                          stratification. Has to be of length `n`.
 #'                          No stratification if `NULL` is supplied.
+#' @param center Whether or not genes should be centered within each subgroup
+#'               defined in `sample_assignment`.
 #' @param split1_proportion The proportion to use for the first dataset during
 #'                         data splitting. The proportion for the second
 #'                         dataset is `1 - split1_proportion`. If stratification
@@ -32,6 +39,16 @@
 #'                         during data splitting in relation to the full
 #'                         dataset will be
 #'                         `total_proportion * split1_proportion`.
+#' @param split_indices Can be used to provide an explicit data split. If this
+#'                      is supplied then `split1_proportion`, and
+#'                      `total_proportion` are ignored.
+#'                      Note that if `sample_assigment` is provided and
+#'                      `center == TRUE`, then subgroup centering will be
+#'                      performed as in the case of random splitting.
+#'                      A vector of length `n` containing entries 1 for cells
+#'                      in the first data split, 2 for cells in the second
+#'                      data split and `NA` for cells that should be excluded
+#'                      from the computations.
 #' @param prior_indicator An indicator matrix (sparse or dense) of size `q x q`
 #'                        that indicates whether there is a known functional
 #'                        relationship between two genes. Ideally, this is
@@ -58,8 +75,6 @@
 #'                         second data split
 #' @param noise_threshold Threshold for the best \eqn{R^2} of a target gene
 #'                        before it gets identified as noise.
-#' @param center Whether or not genes should be centered within each subgroup
-#'               defined in `sample_assignment`.
 #' @param n_cycles Number of maximum algorithmic cycles.
 #' @param use_kmeanspp_init Use kmeans++ for cluster initialization if
 #'                          `target_cluster_start` is a single integer;
@@ -129,11 +144,14 @@
 scregclust <- function(expression,
                        genesymbols,
                        is_regulator,
-                       target_cluster_start,
                        penalization,
+                       n_cl,
+                       target_cluster_start = NULL,
                        sample_assignment = NULL,
+                       center = TRUE,
                        split1_proportion = 0.5,
                        total_proportion = 1,
+                       split_indices = NULL,
                        prior_indicator = NULL,
                        prior_genesymbols = NULL,
                        prior_baseline = 1e-6,
@@ -141,7 +159,6 @@ scregclust <- function(expression,
                        min_cluster_size = 0L,
                        allocate_per_obs = TRUE,
                        noise_threshold = 0.025,
-                       center = TRUE,
                        n_cycles = 50L,
                        use_kmeanspp_init = TRUE,
                        n_init_clusterings = 50L,
@@ -211,38 +228,6 @@ scregclust <- function(expression,
   }
 
   if (!(
-    is.numeric(target_cluster_start)
-    && all(as.integer(target_cluster_start) == target_cluster_start)
-    && (
-      (
-        length(target_cluster_start) == 1L
-        && target_cluster_start <= sum(is_regulator == 0)
-      )
-      || length(target_cluster_start) == sum(is_regulator == 0)
-    )
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
-    }
-    cli::cli_abort(c(
-      "{.var target_cluster_start} is not supplied correctly.",
-      "x" = "Two formats are possible:",
-      "*" = paste(
-        "A vector of initial cluster indices for the target genes of",
-        "length {sum(is_regulator == 0)}."
-      ),
-      "*" = paste(
-        "An integer between 1 and the number of target genes",
-        "({sum(is_regulator == 0)}) specifying the number of initial clusters",
-        "initialised automatically."
-      )
-    ))
-  } else {
-    target_cluster_start <- as.integer(target_cluster_start)
-  }
-
-  if (!(
     is.numeric(penalization)
     && length(penalization) >= 1L
     && all(penalization > 0)
@@ -260,6 +245,53 @@ scregclust <- function(expression,
     ))
   } else {
     penalization <- as.double(penalization)
+  }
+
+  if (!(
+    is.numeric(n_cl)
+    && length(n_cl) == 1L
+    && as.integer(n_cl) == n_cl
+    && n_cl >= 1
+    && n_cl <= sum(is_regulator == 0)
+  )) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(c(
+      "{.var n_cl} is not supplied correctly.",
+      "x" = paste(
+        "An integer between 1 and the number of target genes",
+        "({sum(is_regulator == 0)}) specifying the number of clusters."
+      )
+    ))
+  }
+
+  if (!is.null(target_cluster_start)) {
+    if (!(
+      is.numeric(target_cluster_start)
+      && all(as.integer(target_cluster_start) == target_cluster_start)
+      && length(target_cluster_start) == sum(is_regulator == 0)
+      && all(target_cluster_start >= 1)
+      && all(target_cluster_start <= n_cl)
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(c(
+        "{.var target_cluster_start} is not supplied correctly.",
+        "x" = paste(
+          "A vector of initial cluster indices for the target genes of",
+          "length {sum(is_regulator == 0)}."
+        ),
+        "x" = paste(
+          "Entries need to be between 1 and {.var n_cl} = {n_cl}."
+        )
+      ))
+    } else {
+      target_cluster_start <- as.integer(target_cluster_start)
+    }
   }
 
   if (!(
@@ -288,38 +320,80 @@ scregclust <- function(expression,
   }
 
   if (!(
-    is.numeric(split1_proportion)
-    && length(split1_proportion) == 1
-    && 0 < split1_proportion
-    && split1_proportion < 1
+    is.logical(center)
+    && length(center) == 1
   )) {
     if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
     cli::cli_abort(
-      "{.var split1_proportion} needs to be between 0 and 1."
+      "{.var center} needs to be TRUE or FALSE."
     )
   } else {
-    split1_proportion <- as.double(split1_proportion)
+    center <- center
   }
 
-  if (!(
-    is.numeric(total_proportion)
-    && length(total_proportion) == 1
-    && 0 < total_proportion
-    && total_proportion <= 1
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
+  # If no split indices are provided, then the data split is determined
+  # randomly dependent on split1_proportion and total_proportion.
+  # Otherwise, the provided indices are used.
+  if (is.null(split_indices)) {
+    if (!(
+      is.numeric(split1_proportion)
+      && length(split1_proportion) == 1
+      && 0 < split1_proportion
+      && split1_proportion < 1
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(
+        "{.var split1_proportion} needs to be between 0 and 1."
+      )
+    } else {
+      split1_proportion <- as.double(split1_proportion)
     }
-    cli::cli_abort(paste(
-      "{.var total_proportion} needs to be between 0 (exclusive)",
-      "and 1 (inclusive)."
-    ))
+
+    if (!(
+      is.numeric(total_proportion)
+      && length(total_proportion) == 1
+      && 0 < total_proportion
+      && total_proportion <= 1
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(paste(
+        "{.var total_proportion} needs to be between 0 (exclusive)",
+        "and 1 (inclusive)."
+      ))
+    } else {
+      total_proportion <- as.double(total_proportion)
+    }
   } else {
-    total_proportion <- as.double(total_proportion)
+    if (!(
+      is.numeric(split_indices)
+      && length(split_indices) == n
+      && all(split_indices %in% c(NA, 1, 2))
+      && sum(split_indices == 1, na.rm = TRUE) >= 1
+      && sum(split_indices == 2, na.rm = TRUE) >= 1
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(c(
+        "Wrong format for {.var split_indices}.",
+        "i" = "{.code length(split_indices)} = {length(split_indices)}",
+        "i" = "Should be {n}",
+        "i" = "Should only contain entries 1, 2, or {.code NA}.",
+        "i" = "Needs to contain at least one 1 and one 2."
+      ))
+    } else {
+      split_indices <- as.integer(split_indices)
+    }
   }
 
   if (!is.null(prior_indicator)) {
@@ -489,21 +563,6 @@ scregclust <- function(expression,
   }
 
   if (!(
-    is.logical(center)
-    && length(center) == 1
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
-    }
-    cli::cli_abort(
-      "{.var center} needs to be TRUE or FALSE."
-    )
-  } else {
-    center <- center
-  }
-
-  if (!(
     length(n_cycles) == 1
     && as.integer(n_cycles) == n_cycles
     && n_cycles > 0
@@ -519,35 +578,37 @@ scregclust <- function(expression,
     n_cycles <- as.integer(n_cycles)
   }
 
-  if (!(
-    is.logical(use_kmeanspp_init)
-    && length(use_kmeanspp_init) == 1
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
+  if (is.null(target_cluster_start)) {
+    if (!(
+      is.logical(use_kmeanspp_init)
+      && length(use_kmeanspp_init) == 1
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(
+        "{.var use_kmeanspp_init} needs to be TRUE or FALSE."
+      )
+    } else {
+      use_kmeanspp_init <- use_kmeanspp_init
     }
-    cli::cli_abort(
-      "{.var use_kmeanspp_init} needs to be TRUE or FALSE."
-    )
-  } else {
-    use_kmeanspp_init <- use_kmeanspp_init
-  }
 
-  if (!(
-    length(n_init_clusterings) == 1
-    && as.integer(n_init_clusterings) == n_init_clusterings
-    && n_init_clusterings > 0
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
+    if (!(
+      length(n_init_clusterings) == 1
+      && as.integer(n_init_clusterings) == n_init_clusterings
+      && n_init_clusterings > 0
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(
+        "{.var n_init_clusterings} needs to be a positive integer."
+      )
+    } else {
+      n_init_clusterings <- as.integer(n_init_clusterings)
     }
-    cli::cli_abort(
-      "{.var n_init_clusterings} needs to be a positive integer."
-    )
-  } else {
-    n_init_clusterings <- as.integer(n_init_clusterings)
   }
 
   if (!(
@@ -658,6 +719,7 @@ scregclust <- function(expression,
     expression,
     stratification,
     is_regulator,
+    split_indices,
     split1_proportion,
     total_proportion,
     center
@@ -722,7 +784,7 @@ scregclust <- function(expression,
     z1_target <- z1_target[, !gs_constant_target, drop = FALSE]
     z2_target <- z2_target[, !gs_constant_target, drop = FALSE]
 
-    if (length(target_cluster_start) > 1L) {
+    if (!is.null(target_cluster_start)) {
       target_cluster_start <- target_cluster_start[!gs_constant_target]
     }
 
@@ -820,29 +882,26 @@ scregclust <- function(expression,
   cross_corr2 <- fast_cor(z2_target_scaled, z2_reg_scaled)
 
   # Initial cluster allocation
-  if (length(target_cluster_start) == 1L) {
+  if (is.null(target_cluster_start)) {
     # Find tentative clusters with k-means (use k-means++ to choose
     # good initial clusterings)
-    n_cl <- target_cluster_start
     if (use_kmeanspp_init) {
       k_start_cl <- kmeanspp(
         cross_corr1,
-        n_cluster = target_cluster_start,
+        n_cluster = n_cl,
         n_init_clusterings = n_init_clusterings,
         n_max_iter = 100L
       )
     } else {
       k_start_cl <- stats::kmeans(
         cross_corr1,
-        target_cluster_start,
+        n_cl,
         iter.max = 100L,
         nstart = n_init_clusterings
       )$cluster
     }
   } else {
-    # k_start_cl <- update_cluster_indices(target_cluster_start)
     k_start_cl <- target_cluster_start
-    n_cl <- max(k_start_cl)
   }
 
   if (verbose) {
@@ -1323,9 +1382,6 @@ scregclust <- function(expression,
       # but can be re-assigned in the next cycle
       cluster_size <- sapply(seq_len(n_cl), function(i) sum(idx == i))
       idx[idx %in% which(cluster_size < min_cluster_size)] <- -1
-      # # Could be used to remove empty clusters. Not really necessary.
-      # k <- update_cluster_indices(k)
-      # n_cl <- max(k)
 
       k <- as.integer(idx)
 
@@ -1808,6 +1864,7 @@ print.scregclust_output <- function(x, ...) {
 #'                       of length `ncol(z)`
 #' @param is_regulator an indicator vector, telling which rows in `z` are
 #'                     candidate regulators
+#' @param split_indices a vector of given split indices. can be `NULL`
 #' @param split1_proportion proportion to include in first data split
 #' @param total_proportion proportion of data to include overall in splitting
 #' @param center TRUE if data should be row-centered. Set to FALSE otherwise.
@@ -1819,23 +1876,28 @@ print.scregclust_output <- function(x, ...) {
 #'   {`z2_target`}{second data split, non-TF part}
 #'
 #' @keywords internal
-split_sample <- function(z, stratification, is_regulator,
+split_sample <- function(z, stratification, is_regulator, split_indices,
                          split1_proportion, total_proportion, center) {
-  is_included <- sort(do.call(
-    c,
-    lapply(
-      unname(split(seq_len(ncol(z)), stratification)),
-      function(s) sample(s, floor(length(s) * total_proportion))
-    )
-  ))
+  if (is.null(split_indices)) {
+    is_included <- sort(do.call(
+      c,
+      lapply(
+        unname(split(seq_len(ncol(z)), stratification)),
+        function(s) sample(s, floor(length(s) * total_proportion))
+      )
+    ))
 
-  is_split1 <- sort(do.call(
-    c,
-    lapply(
-      unname(split(seq_along(is_included), stratification[is_included])),
-      function(s) sample(s, floor(length(s) * split1_proportion))
-    )
-  ))
+    is_split1 <- sort(do.call(
+      c,
+      lapply(
+        unname(split(seq_along(is_included), stratification[is_included])),
+        function(s) sample(s, floor(length(s) * split1_proportion))
+      )
+    ))
+  } else {
+    is_included <- which(!is.na(split_indices))
+    is_split1 <- which(split_indices[is_included] == 1L)
+  }
 
   z_ <- z[, is_included]
   if (center) {

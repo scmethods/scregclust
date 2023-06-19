@@ -8,11 +8,14 @@ scregclust(
   expression,
   genesymbols,
   is_regulator,
-  target_cluster_start,
   penalization,
+  n_cl,
+  target_cluster_start = NULL,
   sample_assignment = NULL,
+  center = TRUE,
   split1_proportion = 0.5,
   total_proportion = 1,
+  split_indices = NULL,
   prior_indicator = NULL,
   prior_genesymbols = NULL,
   prior_baseline = 1e-06,
@@ -20,7 +23,6 @@ scregclust(
   min_cluster_size = 0L,
   allocate_per_obs = TRUE,
   noise_threshold = 0.025,
-  center = TRUE,
   n_cycles = 50L,
   use_kmeanspp_init = TRUE,
   n_init_clusterings = 50L,
@@ -40,21 +42,30 @@ data with \code{p} rows of genes and \code{n} columns of cells.}
 \item{is_regulator}{An indicator vector, telling which rows in \code{expression}
 are candidate regulators. Has to be of length \code{p}.}
 
-\item{target_cluster_start}{The start cluster assignment for the rows in
-\code{expression} that correspond to target genes, i.e. those for
-which \code{is_regulator == 0L}. Alternatively, an integer
-indicating the number of clusters. An initial clustering is
-performed on the cross-correlation matrix of targets and genes
-on the first dataset after data splitting.}
-
 \item{penalization}{Sparsity penalty controlling the amount of regulators
 used for each cluster. Either a single positive number
 or a vector of positive numbers.}
+
+\item{n_cl}{Requested number of clusters (integer).
+If this is provided without specifying \code{target_cluster_start},
+then an initial clustering is performed on the cross-correlation
+matrix of targets and genes on the first dataset after
+data splitting.}
+
+\item{target_cluster_start}{The start cluster assignment for the rows in
+\code{expression} that correspond to target genes, i.e. those for
+which \code{is_regulator == 0L}. If this is not specified, then
+see \code{n_cl} regarding cluster initialization.
+If this is provided then \code{use_kmeanspp_init} and
+\code{n_init_clusterings} are ignored.}
 
 \item{sample_assignment}{A vector of sample assignment for each cell, can
 be used to perform the data splitting with
 stratification. Has to be of length \code{n}.
 No stratification if \code{NULL} is supplied.}
+
+\item{center}{Whether or not genes should be centered within each subgroup
+defined in \code{sample_assignment}.}
 
 \item{split1_proportion}{The proportion to use for the first dataset during
 data splitting. The proportion for the second
@@ -67,6 +78,17 @@ observations. The proportion of the first dataset
 during data splitting in relation to the full
 dataset will be
 \code{total_proportion * split1_proportion}.}
+
+\item{split_indices}{Can be used to provide an explicit data split. If this
+is supplied then \code{split1_proportion}, and
+\code{total_proportion} are ignored.
+Note that if \code{sample_assigment} is provided and
+\code{center == TRUE}, then subgroup centering will be
+performed as in the case of random splitting.
+A vector of length \code{n} containing entries 1 for cells
+in the first data split, 2 for cells in the second
+data split and \code{NA} for cells that should be excluded
+from the computations.}
 
 \item{prior_indicator}{An indicator matrix (sparse or dense) of size \verb{q x q}
 that indicates whether there is a known functional
@@ -100,9 +122,6 @@ second data split}
 
 \item{noise_threshold}{Threshold for the best \eqn{R^2} of a target gene
 before it gets identified as noise.}
-
-\item{center}{Whether or not genes should be centered within each subgroup
-defined in \code{sample_assignment}.}
 
 \item{n_cycles}{Number of maximum algorithmic cycles.}
 
