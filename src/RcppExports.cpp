@@ -28,31 +28,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_votes
-Rcpp::IntegerMatrix compute_votes(SEXP resid_array, Eigen::Map<Eigen::MatrixXd> resid_var, Eigen::Map<Eigen::MatrixXd> prior_model_log_prob);
-RcppExport SEXP _scregclust_compute_votes(SEXP resid_arraySEXP, SEXP resid_varSEXP, SEXP prior_model_log_probSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type resid_array(resid_arraySEXP);
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type resid_var(resid_varSEXP);
-    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type prior_model_log_prob(prior_model_log_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_votes(resid_array, resid_var, prior_model_log_prob));
-    return rcpp_result_gen;
-END_RCPP
-}
-// count_votes
-Rcpp::IntegerMatrix count_votes(Rcpp::IntegerMatrix votes, int n_cl);
-RcppExport SEXP _scregclust_count_votes(SEXP votesSEXP, SEXP n_clSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type votes(votesSEXP);
-    Rcpp::traits::input_parameter< int >::type n_cl(n_clSEXP);
-    rcpp_result_gen = Rcpp::wrap(count_votes(votes, n_cl));
-    return rcpp_result_gen;
-END_RCPP
-}
 // jaccard_indicator_comp
 Rcpp::List jaccard_indicator_comp(Rcpp::List gs, double eps);
 RcppExport SEXP _scregclust_jaccard_indicator_comp(SEXP gsSEXP, SEXP epsSEXP) {
@@ -128,8 +103,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_scregclust_allocate_clusters", (DL_FUNC) &_scregclust_allocate_clusters, 7},
-    {"_scregclust_compute_votes", (DL_FUNC) &_scregclust_compute_votes, 3},
-    {"_scregclust_count_votes", (DL_FUNC) &_scregclust_count_votes, 2},
     {"_scregclust_jaccard_indicator_comp", (DL_FUNC) &_scregclust_jaccard_indicator_comp, 2},
     {"_scregclust_coop_lasso", (DL_FUNC) &_scregclust_coop_lasso, 13},
     {"_scregclust_coef_nnls", (DL_FUNC) &_scregclust_coef_nnls, 4},

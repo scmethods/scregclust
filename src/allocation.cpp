@@ -61,19 +61,19 @@ Rcpp::IntegerVector allocate_clusters(SEXP resid_array,
 				.colwise() -
 			0.5 * (2.0 * M_PI * resid_var.row(j).transpose()).array().log();
 
-		// Normalise to convert to probabilities
-		Eigen::RowVectorXd max_model_ll = model_log_likelihood.colwise().maxCoeff();
-		Eigen::MatrixXd model_ll_minus_max =
-			model_log_likelihood.rowwise() - max_model_ll;
-		Eigen::MatrixXd model_log_prob =
-			model_ll_minus_max.rowwise() -
-			model_ll_minus_max.array().exp().colwise().sum().log().matrix();
+		// // Normalise to convert to probabilities
+		// Eigen::RowVectorXd max_model_ll = model_log_likelihood.colwise().maxCoeff();
+		// Eigen::MatrixXd model_ll_minus_max =
+		// 	model_log_likelihood.rowwise() - max_model_ll;
+		// Eigen::MatrixXd model_log_prob =
+		// 	model_ll_minus_max.rowwise() -
+		// 	model_ll_minus_max.array().exp().colwise().sum().log().matrix();
 
 		// Compute total scores by weighting the model likelihood
-		// and the prior probabilities. The latter are computed
-		// by subtracting the total of the prior fractions.
+		// and the prior probabilities.
 		const Eigen::MatrixXd total_model_log_scores =
-			(((1.0 - prior_weight) * model_log_prob.array()).colwise() +
+			// (((1.0 - prior_weight) * model_log_prob.array()).colwise() +
+			(((1.0 - prior_weight) * model_log_likelihood.array()).colwise() +
 			 (prior_weight * prior_log_prob));
 
 		// Compute votes for each of the n_cl clusters
@@ -97,52 +97,4 @@ Rcpp::IntegerVector allocate_clusters(SEXP resid_array,
 	}
 
 	return k + 1;
-}
-
-// [[Rcpp::export]]
-Rcpp::IntegerMatrix compute_votes(SEXP resid_array, Eigen::Map<Eigen::MatrixXd> resid_var,
-								  Eigen::Map<Eigen::MatrixXd> prior_model_log_prob) {
-	double* arr = REAL(resid_array);
-	int* dims = INTEGER(PROTECT(Rf_getAttrib(resid_array, R_DimSymbol)));
-	const auto n_cl = static_cast<Eigen::Index>(dims[0]);
-	const auto n_genes = static_cast<Eigen::Index>(dims[1]);
-	const auto n_obs = static_cast<Eigen::Index>(dims[2]);
-	UNPROTECT(1);
-
-	const auto n_total = n_cl * n_genes;
-	Rcpp::IntegerMatrix votes(static_cast<int>(n_genes), static_cast<int>(n_obs));
-
-	for (Eigen::Index j = 0; j < n_obs; j++) {
-		const Eigen::Map<Eigen::MatrixXd> resid(arr + j * n_total, n_cl, n_genes);
-
-		const Eigen::MatrixXd model_log_likelihood =
-			-0.5 * (2.0 * M_PI * resid_var.array()).log() -
-			resid.transpose().array() / (2.0 * resid_var.array());
-		const Eigen::MatrixXd total_model_log_scores =
-			model_log_likelihood + prior_model_log_prob;
-
-		for (Eigen::Index i = 0; i < n_genes; i++) {
-			int max_idx;
-			total_model_log_scores.row(i).maxCoeff(&max_idx);
-			votes(i, j) = max_idx + 1;
-		}
-
-		Rcpp::checkUserInterrupt();
-	}
-
-	return votes;
-}
-
-// [[Rcpp::export]]
-Rcpp::IntegerMatrix count_votes(Rcpp::IntegerMatrix votes, int n_cl) {
-	Rcpp::IntegerMatrix counts(votes.nrow(), n_cl + 1);
-
-	for (int j = 0; j < votes.ncol(); j++) {
-		for (int i = 0; i < votes.nrow(); i++) {
-			const auto v = votes(i, j);
-			counts(i, v == -1 ? 0 : v) += 1;
-		}
-	}
-
-	return counts;
 }

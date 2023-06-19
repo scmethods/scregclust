@@ -5,14 +5,6 @@ allocate_clusters <- function(resid_array, resid_var, prior_indicator, k_, updat
     .Call(`_scregclust_allocate_clusters`, resid_array, resid_var, prior_indicator, k_, update_order, prior_baseline, prior_weight)
 }
 
-compute_votes <- function(resid_array, resid_var, prior_model_log_prob) {
-    .Call(`_scregclust_compute_votes`, resid_array, resid_var, prior_model_log_prob)
-}
-
-count_votes <- function(votes, n_cl) {
-    .Call(`_scregclust_count_votes`, votes, n_cl)
-}
-
 #' Perform the computations for thresholded Jaccard distance
 #'
 #' @details
