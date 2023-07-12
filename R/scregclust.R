@@ -372,6 +372,29 @@ scregclust <- function(expression,
     } else {
       total_proportion <- as.double(total_proportion)
     }
+    
+    n_samples_split1 <- floor(total_proportion * n * split1_proportion)
+    n_samples_split2 <- floor(total_proportion * n * (1 - split1_proportion))
+    
+    if (
+      n_samples_split1 <= sum(is_regulator == 1)
+      || n_samples_split2 <= sum(is_regulator == 1)
+    ) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(c(
+        "Too few cells.",
+        "x" = paste(
+          "Each data split needs to contain more cells than there",
+          "are regulators."
+        ),
+        "i" = "Number of regulators = {sum(is_regulator == 1)}",
+        "i" = "Elements in split 1 = {n_samples_split1}",
+        "i" = "Elements in split 2 = {n_samples_split2}"
+      ))
+    }
   } else {
     if (!(
       is.numeric(split_indices)
@@ -393,6 +416,23 @@ scregclust <- function(expression,
       ))
     } else {
       split_indices <- as.integer(split_indices)
+    }
+    
+    if (any(table(split_indices) <= sum(is_regulator == 1))) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(c(
+        "Too few cells.",
+        "x" = paste(
+          "Each data split needs to contain more cells than there",
+          "are regulators."
+        ),
+        "i" = "Number of regulators = {sum(is_regulator == 1)}",
+        "i" = "Elements in split 1 = {sum(split_indices == 1, na.rm = TRUE)}",
+        "i" = "Elements in split 2 = {sum(split_indices == 2, na.rm = TRUE)}"
+      ))
     }
   }
 
