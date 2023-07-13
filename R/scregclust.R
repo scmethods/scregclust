@@ -1651,19 +1651,25 @@ scregclust <- function(expression,
           }
         })
       }
-
+      
       # "Hack" to put regulators in tentative cluster
       k_ <- k
       k_[k == -1L] <- n_cl + 1L
+      non_empty_clusters <- which(sapply(
+        seq_len(n_cl + 1L), function(j) sum(k_ == j) > 0
+      ))
       cluster_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
-
-      idx <- apply(
-        diag(1 / Matrix::colSums(cluster_indicator))
-        %*% t(cluster_indicator)
+      
+      idx <- non_empty_clusters[apply(
+        diag(
+          1 / Matrix::colSums(cluster_indicator)[non_empty_clusters],
+          nrow = length(non_empty_clusters)
+        )
+        %*% t(cluster_indicator[, non_empty_clusters])
         %*% cross_corr2,
         2,
         which.max
-      )
+      )]
       idx[idx == n_cl + 1L] <- -1L
 
       cluster[[m]] <- rep.int(0, ncol(z1_reg_scaled) + ncol(z1_target_scaled))
