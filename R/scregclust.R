@@ -138,6 +138,8 @@
 #'   \item{`weights`}{average regulator coefficient for each cluster}
 #'   \item{`coeffs`}{list of regulator coefficient matrices for each cluster
 #'                   as estimated in the coop-Lasso step}
+#'   \item{`sigmas`}{list of vectors of residual variances, one per target gene
+#'                   in each cluster}
 #' }
 #'
 #' @export
@@ -372,10 +374,10 @@ scregclust <- function(expression,
     } else {
       total_proportion <- as.double(total_proportion)
     }
-    
+
     n_samples_split1 <- floor(total_proportion * n * split1_proportion)
     n_samples_split2 <- floor(total_proportion * n * (1 - split1_proportion))
-    
+
     if (
       n_samples_split1 <= sum(is_regulator == 1)
       || n_samples_split2 <= sum(is_regulator == 1)
@@ -417,7 +419,7 @@ scregclust <- function(expression,
     } else {
       split_indices <- as.integer(split_indices)
     }
-    
+
     if (any(table(split_indices) <= sum(is_regulator == 1))) {
       if (verbose && cl) {
         cat("\n")
@@ -1044,6 +1046,7 @@ scregclust <- function(expression,
     best_r2 <- list()
 
     coeffs_final <- list()
+    sigmas_final <- list()
     models_final <- list()
     signs_final <- list()
     weights_final <- list()
@@ -1104,6 +1107,7 @@ scregclust <- function(expression,
 
         if (last_cycle) {
           coeffs_final[[m]] <- vector("list", n_cl)
+          sigmas_final[[m]] <- vector("list", n_cl)
         }
 
         if (verbose) {
@@ -1182,6 +1186,7 @@ scregclust <- function(expression,
 
             if (last_cycle) {
               coeffs_final[[m]][[j]] <- beta
+              sigmas_final[[m]][[j]] <- z1_target_res_sds
             }
           }
         }
@@ -1651,7 +1656,7 @@ scregclust <- function(expression,
           }
         })
       }
-      
+
       # "Hack" to put regulators in tentative cluster
       k_ <- k
       k_[k == -1L] <- n_cl + 1L
@@ -1659,7 +1664,7 @@ scregclust <- function(expression,
         seq_len(n_cl + 1L), function(j) sum(k_ == j) > 0
       ))
       cluster_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
-      
+
       idx <- non_empty_clusters[apply(
         diag(
           1 / Matrix::colSums(cluster_indicator)[non_empty_clusters],
@@ -1734,7 +1739,8 @@ scregclust <- function(expression,
           models = models_final[[m]],
           signs = signs_final[[m]],
           weights = weights_final[[m]],
-          coeffs = coeffs_final[[m]]
+          coeffs = coeffs_final[[m]],
+          sigmas = sigmas_final[[m]]
         ), class = "scregclust_output")
       })
     ), class = "scregclust_result")
