@@ -83,6 +83,10 @@
 #' @param n_init_clusterings Number of kmeans(++) initialisation runs.
 #' @param max_optim_iter Maximum number of iterations during optimization
 #'                       in the coop-Lasso and NNLS steps.
+#' @param tol_rel Relative convergence tolerance during optimization in the
+#'                coop-Lasso step.
+#' @param tol_abs Absolute convergence tolerance during optimization in the
+#'                coop-Lasso and NNLS steps.
 #' @param compute_predictive_r2 Whether to compute predictive \eqn{R^2} per
 #'                              cluster and regulator importance
 #' @param compute_silhouette Whether to compute silhouette scores for each
@@ -165,6 +169,8 @@ scregclust <- function(expression,
                        use_kmeanspp_init = TRUE,
                        n_init_clusterings = 50L,
                        max_optim_iter = 10000L,
+                       tol_rel = 1e-4,
+                       tol_abs = 1e-6,
                        compute_predictive_r2 = TRUE,
                        compute_silhouette = FALSE,
                        verbose = TRUE) {
@@ -1167,7 +1173,7 @@ scregclust <- function(expression,
               ),
               z1_reg_scaled / sqrt(nrow(z1_reg_scaled)),
               penalization[l], ws,
-              eps_rel = 1e-8, eps_abs = 1e-12, max_iter = max_optim_iter,
+              eps_rel = tol_rel, eps_abs = tol_abs, max_iter = max_optim_iter,
               verbose = FALSE
             )
 
@@ -1304,7 +1310,7 @@ scregclust <- function(expression,
 
           beta_hat_nnls <- coef_nnls(
             z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
-            eps = 1e-8, max_iter = max_optim_iter
+            eps = tol_abs, max_iter = max_optim_iter
           )$beta * signs_cl
 
           residuals_train_nnls <- (
@@ -1553,7 +1559,7 @@ scregclust <- function(expression,
               beta_hat_nnls <- coef_nnls(
                 z1_reg_scaled_cl_sign_corrected,
                 z1_target_scaled[, target_cl, drop = FALSE],
-                eps = 1e-8, max_iter = max_optim_iter
+                eps = tol_abs, max_iter = max_optim_iter
               )$beta * signs_cl
 
               ssq[, r] <- colSums((
@@ -1625,7 +1631,7 @@ scregclust <- function(expression,
 
             beta_hat_nnls <- coef_nnls(
               z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
-              eps = 1e-8, max_iter = max_optim_iter
+              eps = tol_abs, max_iter = max_optim_iter
             )$beta * signs_cl
 
             sum_squares_test[, j] <- colSums(

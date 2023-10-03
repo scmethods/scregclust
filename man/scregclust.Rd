@@ -27,6 +27,8 @@ scregclust(
   use_kmeanspp_init = TRUE,
   n_init_clusterings = 50L,
   max_optim_iter = 10000L,
+  tol_rel = 1e-04,
+  tol_abs = 1e-06,
   compute_predictive_r2 = TRUE,
   compute_silhouette = FALSE,
   verbose = TRUE
@@ -135,6 +137,12 @@ centers}
 \item{max_optim_iter}{Maximum number of iterations during optimization
 in the coop-Lasso and NNLS steps.}
 
+\item{tol_rel}{Relative convergence tolerance during optimization in the
+coop-Lasso step.}
+
+\item{tol_abs}{Absolute convergence tolerance during optimization in the
+coop-Lasso and NNLS steps.}
+
 \item{compute_predictive_r2}{Whether to compute predictive \eqn{R^2} per
 cluster and regulator importance}
 
@@ -195,6 +203,8 @@ regulators in rows and clusters in columns}
 \item{\code{weights}}{average regulator coefficient for each cluster}
 \item{\code{coeffs}}{list of regulator coefficient matrices for each cluster
 as estimated in the coop-Lasso step}
+\item{\code{sigmas}}{list of vectors of residual variances, one per target gene
+in each cluster}
 }
 }
 \description{
