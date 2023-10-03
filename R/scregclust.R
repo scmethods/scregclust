@@ -83,10 +83,11 @@
 #' @param n_init_clusterings Number of kmeans(++) initialisation runs.
 #' @param max_optim_iter Maximum number of iterations during optimization
 #'                       in the coop-Lasso and NNLS steps.
-#' @param tol_rel Relative convergence tolerance during optimization in the
-#'                coop-Lasso step.
-#' @param tol_abs Absolute convergence tolerance during optimization in the
-#'                coop-Lasso and NNLS steps.
+#' @param tol_coop_rel Relative convergence tolerance during optimization
+#'                     in the coop-Lasso step.
+#' @param tol_coop_abs Absolute convergence tolerance during optimization
+#'                     in the coop-Lasso step.
+#' @param tol_nnls Convergence tolerance during optimization in the NNLS step.
 #' @param compute_predictive_r2 Whether to compute predictive \eqn{R^2} per
 #'                              cluster and regulator importance
 #' @param compute_silhouette Whether to compute silhouette scores for each
@@ -169,8 +170,9 @@ scregclust <- function(expression,
                        use_kmeanspp_init = TRUE,
                        n_init_clusterings = 50L,
                        max_optim_iter = 10000L,
-                       tol_rel = 1e-4,
-                       tol_abs = 1e-6,
+                       tol_coop_rel = 1e-8,
+                       tol_coop_abs = 1e-12,
+                       tol_nnls = 1e-4,
                        compute_predictive_r2 = TRUE,
                        compute_silhouette = FALSE,
                        verbose = TRUE) {
@@ -676,6 +678,51 @@ scregclust <- function(expression,
   }
 
   if (!(
+    length(tol_coop_rel) == 1
+    && tol_coop_rel > 0
+  )) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(
+      "{.var tol_coop_rel} needs to be a positive scalar."
+    )
+  } else {
+    tol_coop_rel <- as.integer(tol_coop_rel)
+  }
+
+  if (!(
+    length(tol_coop_abs) == 1
+    && tol_coop_abs > 0
+  )) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(
+      "{.var tol_coop_abs} needs to be a positive scalar."
+    )
+  } else {
+    tol_coop_abs <- as.integer(tol_coop_abs)
+  }
+
+  if (!(
+    length(tol_nnls) == 1
+    && tol_nnls > 0
+  )) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(
+      "{.var tol_nnls} needs to be a positive scalar."
+    )
+  } else {
+    tol_nnls <- as.integer(tol_nnls)
+  }
+
+  if (!(
     is.logical(compute_predictive_r2)
     && length(compute_predictive_r2) == 1
   )) {
@@ -1173,7 +1220,9 @@ scregclust <- function(expression,
               ),
               z1_reg_scaled / sqrt(nrow(z1_reg_scaled)),
               penalization[l], ws,
-              eps_rel = tol_rel, eps_abs = tol_abs, max_iter = max_optim_iter,
+              eps_rel = tol_coop_rel,
+              eps_abs = tol_coop_abs,
+              max_iter = max_optim_iter,
               verbose = FALSE
             )
 
@@ -1310,7 +1359,7 @@ scregclust <- function(expression,
 
           beta_hat_nnls <- coef_nnls(
             z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
-            eps = tol_abs, max_iter = max_optim_iter
+            eps = tol_nnls, max_iter = max_optim_iter
           )$beta * signs_cl
 
           residuals_train_nnls <- (
@@ -1559,7 +1608,7 @@ scregclust <- function(expression,
               beta_hat_nnls <- coef_nnls(
                 z1_reg_scaled_cl_sign_corrected,
                 z1_target_scaled[, target_cl, drop = FALSE],
-                eps = tol_abs, max_iter = max_optim_iter
+                eps = tol_nnls, max_iter = max_optim_iter
               )$beta * signs_cl
 
               ssq[, r] <- colSums((
@@ -1631,7 +1680,7 @@ scregclust <- function(expression,
 
             beta_hat_nnls <- coef_nnls(
               z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
-              eps = tol_abs, max_iter = max_optim_iter
+              eps = tol_nnls, max_iter = max_optim_iter
             )$beta * signs_cl
 
             sum_squares_test[, j] <- colSums(
