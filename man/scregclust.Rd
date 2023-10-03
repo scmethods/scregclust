@@ -27,8 +27,9 @@ scregclust(
   use_kmeanspp_init = TRUE,
   n_init_clusterings = 50L,
   max_optim_iter = 10000L,
-  tol_rel = 1e-04,
-  tol_abs = 1e-06,
+  tol_coop_rel = 1e-08,
+  tol_coop_abs = 1e-12,
+  tol_nnls = 1e-04,
   compute_predictive_r2 = TRUE,
   compute_silhouette = FALSE,
   verbose = TRUE
@@ -137,11 +138,13 @@ centers}
 \item{max_optim_iter}{Maximum number of iterations during optimization
 in the coop-Lasso and NNLS steps.}
 
-\item{tol_rel}{Relative convergence tolerance during optimization in the
-coop-Lasso step.}
+\item{tol_coop_rel}{Relative convergence tolerance during optimization
+in the coop-Lasso step.}
 
-\item{tol_abs}{Absolute convergence tolerance during optimization in the
-coop-Lasso and NNLS steps.}
+\item{tol_coop_abs}{Absolute convergence tolerance during optimization
+in the coop-Lasso step.}
+
+\item{tol_nnls}{Convergence tolerance during optimization in the NNLS step.}
 
 \item{compute_predictive_r2}{Whether to compute predictive \eqn{R^2} per
 cluster and regulator importance}

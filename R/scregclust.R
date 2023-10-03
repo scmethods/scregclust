@@ -689,7 +689,7 @@ scregclust <- function(expression,
       "{.var tol_coop_rel} needs to be a positive scalar."
     )
   } else {
-    tol_coop_rel <- as.integer(tol_coop_rel)
+    tol_coop_rel <- as.double(tol_coop_rel)
   }
 
   if (!(
@@ -704,7 +704,7 @@ scregclust <- function(expression,
       "{.var tol_coop_abs} needs to be a positive scalar."
     )
   } else {
-    tol_coop_abs <- as.integer(tol_coop_abs)
+    tol_coop_abs <- as.double(tol_coop_abs)
   }
 
   if (!(
@@ -719,7 +719,7 @@ scregclust <- function(expression,
       "{.var tol_nnls} needs to be a positive scalar."
     )
   } else {
-    tol_nnls <- as.integer(tol_nnls)
+    tol_nnls <- as.double(tol_nnls)
   }
 
   if (!(
