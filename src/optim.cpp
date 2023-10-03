@@ -291,7 +291,7 @@ Rcpp::List coop_lasso(
 			if (verbose) {
 				Rcpp::Rcout << std::endl;
 			}
-			Rcpp::Rcout << "Maximum number of iterations reached";
+			Rcpp::Rcout << "Coop-Lasso: Maximum number of iterations reached";
 			if (!verbose) {
 				Rcpp::Rcout << std::endl;
 			}
@@ -520,7 +520,7 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 		}
 
 		if (l == max_iter - 1) {
-			Rcpp::Rcout << "Maximum number of iterations reached" << std::endl;
+			Rcpp::Rcout << "NNLS: Maximum number of iterations reached" << std::endl;
 		}
 
 		Rcpp::checkUserInterrupt();
