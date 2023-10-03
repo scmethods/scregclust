@@ -10,7 +10,7 @@ test_that("constant genes are discarded correctly", {
   is_regulator <- c(0, 0, 0, 0, 0, 0, 1, 1)
 
   fit <- scregclust(
-    expression, genesymbols, is_regulator, 2, 0.1, verbose = FALSE
+    expression, genesymbols, is_regulator, 0.1, 2, verbose = FALSE
   )
 
   expect_equal(
