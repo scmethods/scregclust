@@ -928,6 +928,7 @@ scregclust <- function(expression,
   # Scale first data split for regression preprocessing
   # No scaling of the target genes. Their scale is implicitly dealt with below.
   z1_target_scaled <- scale(z1_target, scale = FALSE)
+  z1_target_sds <- apply(z1_target, 2, sd)
   z1_reg_scaled <- scale(z1_reg)
 
   # Scale second data split as first one since it will be used as a
@@ -1358,9 +1359,14 @@ scregclust <- function(expression,
           )
 
           beta_hat_nnls <- coef_nnls(
-            z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
+            z1_reg_scaled_cl_sign_corrected,
+            z1_target_scaled %*% diag(
+              1 / z1_target_sds,
+              nrow = ncol(z1_target_scaled),
+              ncol = ncol(z1_target_scaled)
+            ),
             eps = tol_nnls, max_iter = max_optim_iter
-          )$beta * signs_cl
+          )$beta * signs_cl * z1_target_sds
 
           residuals_train_nnls <- (
             z1_target_scaled - z1_reg_scaled_cl %*% beta_hat_nnls
@@ -1607,9 +1613,13 @@ scregclust <- function(expression,
 
               beta_hat_nnls <- coef_nnls(
                 z1_reg_scaled_cl_sign_corrected,
-                z1_target_scaled[, target_cl, drop = FALSE],
+                z1_target_scaled[, target_cl, drop = FALSE] %*% diag(
+                  1 / z1_target_sds[target_cl],
+                  nrow = length(target_cl),
+                  ncol = length(target_cl)
+                ),
                 eps = tol_nnls, max_iter = max_optim_iter
-              )$beta * signs_cl
+              )$beta * signs_cl * z1_target_sds[target_cl]
 
               ssq[, r] <- colSums((
                 z2_target_scaled[, target_cl, drop = FALSE]
@@ -1679,9 +1689,14 @@ scregclust <- function(expression,
             )
 
             beta_hat_nnls <- coef_nnls(
-              z1_reg_scaled_cl_sign_corrected, z1_target_scaled,
+              z1_reg_scaled_cl_sign_corrected,
+              z1_target_scaled %*% diag(
+                1 / z1_target_sds,
+                nrow = ncol(z1_target_scaled),
+                ncol = ncol(z1_target_scaled)
+              ),
               eps = tol_nnls, max_iter = max_optim_iter
-            )$beta * signs_cl
+            )$beta * signs_cl * z1_target_sds
 
             sum_squares_test[, j] <- colSums(
               (z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls)^2
