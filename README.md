@@ -54,7 +54,7 @@ is_predictor <- out[[3]]
 
 fit <- scregclust(
   z, genesymbols, is_predictor,
-  target_cluster_start = 10L, penalization = seq(0.1,0.5,0.1),
+  n_cl = 10L, penalization = seq(0.1,0.5,0.1),
   n_cycles = 10L, noise_threshold = 0.05, center=FALSE,
   sample_assignment = sample_assignment
 )
