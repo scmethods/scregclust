@@ -16,7 +16,7 @@ You can install the development version of scregclust from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("idalarsson/scEM_package")
+devtools::install_github("sven-nelander/scregclust")
 ```
 
 ## Tutorial
