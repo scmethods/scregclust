@@ -162,6 +162,10 @@ A list with S3 class \code{scregclust} containing
 parameter. See below.}
 \item{target_cluster_start}{Initial clustering for target genes,
 i.e. those with \code{is_regulator == 0}}
+\item{split_indices}{either verbatim the vector given as input or
+a vector encoding the splits as NA = not included,
+1 = split 1 or 2 = split 2. Allows reproduciblity
+of data splits.}
 
 For each supplied penalization parameter, \code{results} contains a list with
 \itemize{

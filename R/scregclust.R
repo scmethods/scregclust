@@ -101,6 +101,10 @@
 #'                  parameter. See below.}
 #'   \item{target_cluster_start}{Initial clustering for target genes,
 #'                               i.e. those with `is_regulator == 0`}
+#'   \item{split_indices}{either verbatim the vector given as input or
+#'                        a vector encoding the splits as NA = not included,
+#'                        1 = split 1 or 2 = split 2. Allows reproduciblity
+#'                        of data splits.}
 #'
 #' For each supplied penalization parameter, `results` contains a list with
 #' * the current `penalization` parameter,
@@ -824,6 +828,7 @@ scregclust <- function(expression,
   z2_reg <- split_z$z2_reg
   z1_target <- split_z$z1_target
   z2_target <- split_z$z2_target
+  split_indices <- split_z$split_indices
 
   # Remove unnecessary variable to save memory
   split_z <- NULL
@@ -1829,7 +1834,8 @@ scregclust <- function(expression,
     list(
       penalization = penalization,
       results = results,
-      target_cluster_start = k_start_cl
+      target_cluster_start = k_start_cl,
+      split_indices = split_indices
     ),
     class = "scregclust"
   )
@@ -1992,10 +1998,14 @@ print.scregclust_output <- function(x, ...) {
 #' @param center TRUE if data should be row-centered. Set to FALSE otherwise.
 #'
 #' @return a list containing
-#'   {`z1_reg`}{first data split, TF-part}
-#'   {`z2_reg`}{second data split, TF-part}
-#'   {`z1_target`}{first data split, non-TF part}
-#'   {`z2_target`}{second data split, non-TF part}
+#'   \item{z1_reg}{first data split, TF-part}
+#'   \item{z2_reg}{second data split, TF-part}
+#'   \item{z1_target}{first data split, non-TF part}
+#'   \item{z2_target}{second data split, non-TF part}
+#'   \item{split_indices}{either verbatim the vector given as input or
+#'                        a vector encoding the splits as NA = not included,
+#'                        1 = split 1 or 2 = split 2. Allows reproduciblity
+#'                        of data splits.}
 #'
 #' @keywords internal
 split_sample <- function(z, stratification, is_regulator, split_indices,

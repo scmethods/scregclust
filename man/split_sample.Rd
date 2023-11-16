@@ -33,10 +33,14 @@ candidate regulators}
 }
 \value{
 a list containing
-{\code{z1_reg}}{first data split, TF-part}
-{\code{z2_reg}}{second data split, TF-part}
-{\code{z1_target}}{first data split, non-TF part}
-{\code{z2_target}}{second data split, non-TF part}
+\item{z1_reg}{first data split, TF-part}
+\item{z2_reg}{second data split, TF-part}
+\item{z1_target}{first data split, non-TF part}
+\item{z2_target}{second data split, non-TF part}
+\item{split_indices}{either verbatim the vector given as input or
+a vector encoding the splits as NA = not included,
+1 = split 1 or 2 = split 2. Allows reproduciblity
+of data splits.}
 }
 \description{
 Splits sample in train and test set
