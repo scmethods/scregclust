@@ -116,7 +116,8 @@ Run `scregclust` with number of initial clusters set to 10 and test
 several penalties. `noise_threshold` controls the minimum $R^2$ a gene has
 to achieve across clusters. Otherwise it is placed in the noise/rag-bag cluster.
 The run can be reproduced with the command below. A fitted model can be
-downloaded from GitHub for convenience at [link]().
+downloaded from [GitHub](https://github.com/sven-nelander/scregclust/raw/main/datasets/pbmc_scregclust.rds)
+for convenience.
 
 ```{r run-scregclust}
 # set.seed(8374)
