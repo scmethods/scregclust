@@ -21,10 +21,10 @@ devtools::install_github("idalarsson/scEM_package")
 
 ## Tutorial
 
-Here we demonstrate the scregclust workflow using the PBMC data from 10X Genomics (available 
-[here](https://www.10xgenomics.com/welcome?closeUrl=%2Fresources%2Fdatasets&lastTouchOfferName=PBMC%20from%20a%20Healthy%20Donor%20-%20Granulocytes%20Removed%20Through%20Cell%20Sorting%20%283k%29&lastTouchOfferType=Dataset&product=chromium&redirectUrl=%2Fresources%2Fdatasets%2Fpbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-3-k-1-standard-2-0-0)).
+Here we demonstrate the scregclust workflow using the PBMC data from
+10X Genomics (available [here](https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-3-k-1-standard-2-0-0)).
 
-``` r
+```r
 # Load required packages
 library(Seurat)
 library(scregclust)
