@@ -1,6 +1,6 @@
 Package: scregclust
 Title: Reconstructing the regulatory programs of target genes in single cell data
-Version: 0.1.4
+Version: 0.1.5
 Authors@R: c(
     person("Ida", "Larsson", ,"ida.larsson@igp.uu.se", role = c("aut"),
            comment = c(ORCID = "0000-0001-5422-4243")),
@@ -14,7 +14,7 @@ Description: This package provides an implementation of our scRegClust
   Target genes are clustered and each cluster is associated with a linear
   model accounting for the regulatory program driving the genes in the cluster.
 Encoding: UTF-8
-Depends: R (>= 3.1.0)
+Depends: R (>= 3.5.0)
 Imports:
     Matrix,
     stats,
@@ -31,7 +31,9 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    Seurat (>= 5.0.0),
+    hdf5r
 LinkingTo: Rcpp, RcppEigen
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)

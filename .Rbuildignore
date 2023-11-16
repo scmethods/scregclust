@@ -1,5 +1,10 @@
-^datasets$
-^scripts$
-^LICENSE\.md$
-^compile_flags.txt$
-^overview_fig1A.png$
+datasets
+scripts
+LICENSE\.md
+compile_flags.txt
+overview_fig1A.png
+.RData$
+^vignettes/pbmc_cache
+^vignettes/pbmc_files
+.h5$
+.rds$
