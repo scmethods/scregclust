@@ -14,12 +14,15 @@ as rownames.}
 }
 \value{
 A list with
-{genesymbols}{The gene symbols extracted from the expression matrix}
-{sample_assignment}{A vector filled with \code{1}'s of the same length as there
+\item{genesymbols}{The gene symbols extracted from the expression matrix}
+\item{sample_assignment}{A vector filled with \code{1}'s of the same length as there
 are columns in the gene expression matrix.}
-{is_regulator}{Whether a gene is considered to be a regulator or not,
+\item{is_regulator}{Whether a gene is considered to be a regulator or not,
 determined dependent on \code{mode}.}
 }
 \description{
 Package data before clustering
+}
+\seealso{
+\code{\link[=get_regulator_list]{get_regulator_list()}}
 }

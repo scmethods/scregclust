@@ -1239,6 +1239,9 @@ scregclust <- function(expression,
                 ncol = n_target_cl
               )
             )
+            # ADMM only soft-thresholds the other variable (zeta), not beta.
+            # At convergence, both should be very close but ensure that
+            # almost-zeros are actual zeros.
             beta[abs(beta) < 1e-6] <- 0
 
             models[, j] <- rowSums(abs(beta) > 0) > 0
@@ -2026,6 +2029,10 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
         function(s) sample(s, floor(length(s) * split1_proportion))
       )
     ))
+    
+    split_indices <- rep.int(NA, ncol(z))
+    split_indices[is_included] <- 2
+    split_indices[is_included[is_split1]] <- 1
   } else {
     is_included <- which(!is.na(split_indices))
     is_split1 <- which(split_indices[is_included] == 1L)
@@ -2047,7 +2054,8 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
     z1_reg = t(z_[, is_split1][is_regulator == 1L, ]),
     z2_reg = t(z_[, -is_split1][is_regulator == 1L, ]),
     z1_target = t(z_[, is_split1][is_regulator == 0L, ]),
-    z2_target = t(z_[, -is_split1][is_regulator == 0L, ])
+    z2_target = t(z_[, -is_split1][is_regulator == 0L, ]),
+    split_indices = split_indices
   )
 }
 
@@ -2058,27 +2066,21 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
 #' @param mode Determines which genes are considered to be regulators.
 #'
 #' @return A list with
-#'   {genesymbols}{The gene symbols extracted from the expression matrix}
-#'   {sample_assignment}{A vector filled with `1`'s of the same length as there
+#'   \item{genesymbols}{The gene symbols extracted from the expression matrix}
+#'   \item{sample_assignment}{A vector filled with `1`'s of the same length as there
 #'                       are columns in the gene expression matrix.}
-#'   {is_regulator}{Whether a gene is considered to be a regulator or not,
+#'   \item{is_regulator}{Whether a gene is considered to be a regulator or not,
 #'                  determined dependent on `mode`.}
+#' 
+#' @seealso [get_regulator_list()]
 #'
 #' @export
 scregclust_format <- function(expression_matrix, mode = c("TF", "kinase")) {
-  mode <- match.arg(mode)
-  if (mode == "TF") {
-    regulator <- human_tfs_v3
-  } else if (mode == "kinase") {
-    regulator <- human_kinases
-  } else {
-    stop("Wrong regulator mode")
-  }
-
+  regulators <- get_regulator_list(mode)
   genesymbols <- rownames(expression_matrix)
 
   is_regulator <- rep(0, nrow(expression_matrix))
-  idx <- which(genesymbols %in% regulator)
+  idx <- which(genesymbols %in% regulators)
   is_regulator[idx] <- 1
 
   sample_assignment <- rep(1, ncol(expression_matrix))
@@ -2088,4 +2090,21 @@ scregclust_format <- function(expression_matrix, mode = c("TF", "kinase")) {
     sample_assignment = sample_assignment,
     is_regulator = is_regulator
   )
+}
+
+#' Return list of regulator genes
+#' 
+#' @param mode Determines which genes are considered to be regulators.
+#'             Currently supports TF=transcription factors and kinases.
+#' @return a list of gene symbols
+#' @seealso [scregclust_format()]
+#' 
+#' @export
+get_regulator_list <- function(mode = c("TF", "kinase")) {
+  mode <- match.arg(mode)
+  if (mode == "TF") {
+    return(human_tfs_v3)
+  } else if (mode == "kinase") {
+    return(human_kinases)
+  }
 }
