@@ -1646,9 +1646,9 @@ scregclust <- function(expression,
 
             r2_removed[[m]][[j]] <- 1 - t(
               t(ssq) / colSums(scale(
-                  z2_target_scaled[, target_cl, drop = FALSE],
-                  center = TRUE,
-                  scale = FALSE
+                z2_target_scaled[, target_cl, drop = FALSE],
+                center = TRUE,
+                scale = FALSE
               )^2)
             )
             colnames(r2_removed[[m]][[j]]) <- c("None", genesymbols_reg[reg_cl])
@@ -2029,7 +2029,7 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
         function(s) sample(s, floor(length(s) * split1_proportion))
       )
     ))
-    
+
     split_indices <- rep.int(NA, ncol(z))
     split_indices[is_included] <- 2
     split_indices[is_included[is_split1]] <- 1
@@ -2067,11 +2067,11 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
 #'
 #' @return A list with
 #'   \item{genesymbols}{The gene symbols extracted from the expression matrix}
-#'   \item{sample_assignment}{A vector filled with `1`'s of the same length as there
-#'                       are columns in the gene expression matrix.}
+#'   \item{sample_assignment}{A vector filled with `1`'s of the same length as
+#'                            there are columns in the gene expression matrix.}
 #'   \item{is_regulator}{Whether a gene is considered to be a regulator or not,
-#'                  determined dependent on `mode`.}
-#' 
+#'                       determined dependent on `mode`.}
+#'
 #' @seealso [get_regulator_list()]
 #'
 #' @export
@@ -2093,12 +2093,12 @@ scregclust_format <- function(expression_matrix, mode = c("TF", "kinase")) {
 }
 
 #' Return list of regulator genes
-#' 
+#'
 #' @param mode Determines which genes are considered to be regulators.
 #'             Currently supports TF=transcription factors and kinases.
 #' @return a list of gene symbols
 #' @seealso [scregclust_format()]
-#' 
+#'
 #' @export
 get_regulator_list <- function(mode = c("TF", "kinase")) {
   mode <- match.arg(mode)

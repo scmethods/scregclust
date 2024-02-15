@@ -1,3 +1,5 @@
 .DS_Store
 inst/doc
 compile_flags.txt
+/doc/
+/Meta/

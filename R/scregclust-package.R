@@ -20,8 +20,8 @@
 "_PACKAGE"
 
 .onUnload <- function(libpath) {
-    library.dynam.unload("scregclust", libpath)
+  library.dynam.unload("scregclust", libpath)
 }
 
 # Shut up some annoying `R CMD check` warnings
-utils::globalVariables(".")
+utils::globalVariables(c(".", "variable"))

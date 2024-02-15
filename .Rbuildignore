@@ -8,3 +8,5 @@ overview_fig1A.png
 ^vignettes/pbmc_files
 .h5$
 .rds$
+^doc$
+^Meta$

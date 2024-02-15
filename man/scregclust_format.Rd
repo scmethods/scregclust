@@ -15,8 +15,8 @@ as rownames.}
 \value{
 A list with
 \item{genesymbols}{The gene symbols extracted from the expression matrix}
-\item{sample_assignment}{A vector filled with \code{1}'s of the same length as there
-are columns in the gene expression matrix.}
+\item{sample_assignment}{A vector filled with \code{1}'s of the same length as
+there are columns in the gene expression matrix.}
 \item{is_regulator}{Whether a gene is considered to be a regulator or not,
 determined dependent on \code{mode}.}
 }

@@ -502,7 +502,7 @@ fast_cor <- function(x, y) {
   yv <- scale(y, center = TRUE, scale = FALSE)
   xvss <- colSums(xv * xv)
   yvss <- colSums(yv * yv)
-  result <- (t(xv) %*% yv) / sqrt(outer(xvss, yvss))
+  result <- crossprod(xv, yv) / sqrt(outer(xvss, yvss))
 
   pmax(pmin(result, 1), -1)
 }
