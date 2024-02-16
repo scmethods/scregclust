@@ -123,12 +123,19 @@
 #' \describe{
 #'   \item{`reg_table`}{a regulator table, a matrix of weights for each
 #'                      regulator and cluster}
-#'   \item{`cluster`}{the cluster assignments for all genes (including
-#'                    regulators); regulators are placed in clusters with the
-#'                    highest accumulated correlation between target genes
-#'                    and regulators}
-#'   \item{`r2`}{best predictive \eqn{R^2} value for each target gene across
-#'               all clusters}
+#'   \item{`cluster`}{the cluster assignments for all genes with regulators
+#'                    marked as `NA`}
+#'   \item{`cluster_all`}{the cluster assignments for all genes with regulators
+#'                        marked as `NA`. Genes that are in the rag-bag cluster
+#'                        (marked with -1 in `cluster`) are assigned to the
+#'                        existing cluster in which it has the largest
+#'                        \eqn{R^2}, even if it is below `noise_threshold`.}
+#'   \item{`r2`}{matrix of predictive \eqn{R^2} value for each target gene and
+#'              cluster}
+#'   \item{`best_r2`}{vector of best predictive \eqn{R^2} for each gene
+#'                   (regulators marked with NA)}
+#'   \item{`best_r2_idx`}{cluster index coreesponding to best predictive
+#'                        \eqn{R^2} for each gene (regulators marked with NA)}
 #'   \item{`r2_cluster`}{a vector of predictive \eqn{R^2} values for each
 #'                       cluster (included if `compute_predictive_r2 == TRUE`)}
 #'   \item{`importance`}{a matrix of importance values for each regulator (rows)
@@ -146,9 +153,9 @@
 #'                  regulators in rows and clusters in columns}
 #'   \item{`weights`}{average regulator coefficient for each cluster}
 #'   \item{`coeffs`}{list of regulator coefficient matrices for each cluster
-#'                   as estimated in the coop-Lasso step}
-#'   \item{`sigmas`}{list of vectors of residual variances, one per target gene
-#'                   in each cluster}
+#'                   for all target genes as re-estimated in the NNLS step}
+#'   \item{`sigmas`}{matrix of residual variances, one per target gene
+#'                   in each cluster; derived from the residuals in NNLS step}
 #' }
 #'
 #' @export
@@ -619,14 +626,14 @@ scregclust <- function(expression,
   if (!(
     length(n_cycles) == 1
     && as.integer(n_cycles) == n_cycles
-    && n_cycles > 0
+    && n_cycles >= 0
   )) {
     if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
     cli::cli_abort(
-      "{.var n_cycles} needs to be a positive integer."
+      "{.var n_cycles} needs to be a non-negative integer."
     )
   } else {
     n_cycles <- as.integer(n_cycles)
@@ -945,6 +952,9 @@ scregclust <- function(expression,
     z2_reg, colMeans(z1_reg), apply(z1_reg, 2, sd)
   )
 
+  # n_target <- ncol(z1_target_scaled) # number of targets
+  n_reg <- ncol(z1_reg_scaled) # number of predictors
+
   # Remove unnecessary variables to save memory
   z1_reg <- NULL
   z2_reg <- NULL
@@ -1106,13 +1116,14 @@ scregclust <- function(expression,
 
     coeffs_final <- list()
     sigmas_final <- list()
+    r2_final <- list()
+    best_r2_final <- list()
+    best_r2_idx_final <- list()
     models_final <- list()
     signs_final <- list()
     weights_final <- list()
 
     final_cycle_length <- 1L
-
-    n_reg <- ncol(z1_reg_scaled) # number of predictors
 
     ############################################################################
     ## Start cycles ############################################################
@@ -1121,15 +1132,17 @@ scregclust <- function(expression,
     for (cycle in seq_len(n_cycles + 1L)) {
       # Check if we are on the last cycle
       if (cycle == n_cycles + 1L) {
-        # If we arrive here then no convergence occured. Inform the
-        # user about this.
-        cli::cli_alert_info(paste(
-          "Reached maximum number of iterations without convergence."
-        ))
-        cli::cli_text(
-          cli::col_yellow(cli::symbol$square_small_filled),
-          " Stopping"
-        )
+        if (n_cycles > 0L) {
+          # If we arrive here then no convergence occured. Inform the
+          # user about this.
+          cli::cli_alert_info(paste(
+            "Reached maximum number of iterations without convergence."
+          ))
+          cli::cli_text(
+            cli::col_yellow(cli::symbol$square_small_filled),
+            " Stopping"
+          )
+        }
         last_cycle <- TRUE
       }
 
@@ -1139,7 +1152,7 @@ scregclust <- function(expression,
           cli::cli_text(
             cli::symbol$pointer,
             cli::col_blue(" {.strong Last cycle}"),
-            " Estimation of regulators only"
+            " No cluster allocation"
           )
         } else {
           cli::cli_text(
@@ -1166,7 +1179,6 @@ scregclust <- function(expression,
 
         if (last_cycle) {
           coeffs_final[[m]] <- vector("list", n_cl)
-          sigmas_final[[m]] <- vector("list", n_cl)
         }
 
         if (verbose) {
@@ -1247,11 +1259,6 @@ scregclust <- function(expression,
             models[, j] <- rowSums(abs(beta) > 0) > 0
             weights[, j] <- rowMeans(beta)
             signs[models[, j], j] <- sign(weights[models[, j], j])
-
-            if (last_cycle) {
-              coeffs_final[[m]][[j]] <- beta
-              sigmas_final[[m]][[j]] <- z1_target_res_sds
-            }
           }
         }
 
@@ -1295,133 +1302,145 @@ scregclust <- function(expression,
             cat("\n")
           }
         }
+
+
+        ########################################################
+        ## START Step 2: Determining target gene coefficients ##
+        ########################################################
+
+        # If there are no predictors in a model, then the best prediction
+        # is constant zero, since there is no intercept. The sum-of-squares
+        # for each gene is then just the squared response.
+        sum_squares_train <- matrix(
+          rep.int(colSums(z1_target_scaled^2), n_cl),
+          nrow = ncol(z1_target_scaled),
+          ncol = n_cl
+        )
+
+        sum_squares_test <- matrix(
+          rep.int(colSums(z2_target_scaled^2), n_cl),
+          nrow = ncol(z2_target_scaled),
+          ncol = n_cl
+        )
+
+        if (allocate_per_obs && !last_cycle) {
+          # Reset values in SSQ array
+          reset_array(sq_residuals_test, z2_target_scaled^2)
+        }
+
+        if (verbose) {
+          start_time <- Sys.time()
+          sb <- cli::cli_status(paste(
+            "{cli::symbol$arrow_right} {.strong Step 2a:}",
+            "Re-estimate coefficients"
+          ))
+        }
+
+        for (j in seq_len(n_cl)) {
+          if (verbose) {
+            cluster_progstr <- progstr(j, n_cl, "clusters")
+            cli::cli_status_update(
+              id = sb,
+              paste(
+                "{cli::symbol$arrow_right} {.strong Step 2a:}",
+                "Re-estimate coefficients",
+                cluster_progstr
+              )
+            )
+          }
+
+          # Get regulators used in cluster/model j
+          reg_cl <- which(models[, j] == TRUE)
+          if (length(reg_cl) > 0L) {
+            z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
+            z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
+
+            signs_cl <- signs[reg_cl, j]
+            # Adjust the sign of the predicting regulators and estimate
+            # coefficients using non-negative least squares for
+            # sign-consistent estimates (following Meinshausen, 2013)
+            z1_reg_scaled_cl_sign_corrected <- (
+              z1_reg_scaled_cl
+              %*% diag(
+                signs_cl,
+                nrow = length(signs_cl),
+                ncol = length(signs_cl)
+              )
+            )
+
+            beta_hat_nnls <- coef_nnls(
+              z1_reg_scaled_cl_sign_corrected,
+              z1_target_scaled %*% diag(
+                1 / z1_target_sds,
+                nrow = ncol(z1_target_scaled),
+                ncol = ncol(z1_target_scaled)
+              ),
+              eps = tol_nnls, max_iter = max_optim_iter
+            )$beta * signs_cl * z1_target_sds
+
+            residuals_train_nnls <- (
+              z1_target_scaled - z1_reg_scaled_cl %*% beta_hat_nnls
+            )
+            residuals_test_nnls <- (
+              z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
+            )
+
+            # NNLS squared residuals, SSQ and R-square
+            if (allocate_per_obs && !last_cycle) {
+              sq_residuals_test[j, , ] <- residuals_test_nnls^2
+            }
+            sum_squares_test[, j] <- colSums(residuals_test_nnls^2)
+            sum_squares_train[, j] <- colSums(residuals_train_nnls^2)
+
+            if (last_cycle) {
+              coeffs_final[[m]][[j]] <- beta_hat_nnls
+            }
+          }
+        }
+
+        if (verbose) {
+          end_time <- Sys.time()
+          cli::cli_status_clear(id = sb)
+          cli::cli_alert_success(paste(
+            "{.strong Step 2a:} Coefficients re-estimated",
+            cli::col_blue(
+              "(in ", prettyunits::pretty_dt(end_time - start_time), ")"
+            )
+          ))
+        }
+
+        r2_test <- 1 - (
+          sum_squares_test / colSums(
+            scale(z2_target_scaled, center = TRUE, scale = FALSE)^2
+          )
+        )
+        best_r2[[cycle]] <- apply(r2_test, 1, max)
+
+        resid_var <- t(
+          t(sum_squares_train)
+          / (nrow(z1_target_scaled) - colSums(models))
+        )
+
+        if (last_cycle) {
+          sigmas_final[[m]] <- sqrt(resid_var)
+          r2_final[[m]] <- r2_test
+          best_r2_final[[m]] <- best_r2[[cycle]]
+          best_r2_idx_final[[m]] <- apply(r2_test, 1, which.max)
+        }
       }
 
-      ########################################################
-      ## START Step 2: Determining target gene coefficients ##
-      ########################################################
-
-      # Do not perform on last step
+      # Do not perform allocation on last cycle
       if (last_cycle) {
         break
-      }
-
-      # If there are no predictors in a model, then the best prediction
-      # is constant zero, since there is no intercept. The sum-of-squares
-      # for each gene is then just the squared response.
-      sum_squares_train <- matrix(
-        rep.int(colSums(z1_target_scaled^2), n_cl),
-        nrow = ncol(z1_target_scaled),
-        ncol = n_cl
-      )
-
-      sum_squares_test <- matrix(
-        rep.int(colSums(z2_target_scaled^2), n_cl),
-        nrow = ncol(z2_target_scaled),
-        ncol = n_cl
-      )
-
-      if (allocate_per_obs) {
-        # Reset values in SSQ array
-        reset_array(sq_residuals_test, z2_target_scaled^2)
       }
 
       if (verbose) {
         start_time <- Sys.time()
         sb <- cli::cli_status(paste(
-          "{cli::symbol$arrow_right} {.strong Step 2a:}",
-          "Re-estimate coefficients"
+          "{cli::symbol$arrow_right} {.strong Step 2b:}",
+          "Allocating clusters"
         ))
       }
-
-      for (j in seq_len(n_cl)) {
-        if (verbose) {
-          cluster_progstr <- progstr(j, n_cl, "clusters")
-          cli::cli_status_update(
-            id = sb,
-            paste(
-              "{cli::symbol$arrow_right} {.strong Step 2a:}",
-              "Re-estimate coefficients",
-              cluster_progstr
-            )
-          )
-        }
-
-        # Get regulators used in cluster/model j
-        reg_cl <- which(models[, j] == TRUE)
-        if (length(reg_cl) > 0L) {
-          z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
-          z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
-
-          signs_cl <- signs[reg_cl, j]
-          # Adjust the sign of the predicting regulators and estimate
-          # coefficients using non-negative least squares for
-          # sign-consistent estimates (following Meinshausen, 2013)
-          z1_reg_scaled_cl_sign_corrected <- (
-            z1_reg_scaled_cl
-            %*% diag(
-              signs_cl,
-              nrow = length(signs_cl),
-              ncol = length(signs_cl)
-            )
-          )
-
-          beta_hat_nnls <- coef_nnls(
-            z1_reg_scaled_cl_sign_corrected,
-            z1_target_scaled %*% diag(
-              1 / z1_target_sds,
-              nrow = ncol(z1_target_scaled),
-              ncol = ncol(z1_target_scaled)
-            ),
-            eps = tol_nnls, max_iter = max_optim_iter
-          )$beta * signs_cl * z1_target_sds
-
-          residuals_train_nnls <- (
-            z1_target_scaled - z1_reg_scaled_cl %*% beta_hat_nnls
-          )
-          residuals_test_nnls <- (
-            z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
-          )
-
-          # NNLS squared residuals, SSQ and R-square
-          if (allocate_per_obs) {
-            sq_residuals_test[j, , ] <- residuals_test_nnls^2
-          }
-          sum_squares_test[, j] <- colSums(residuals_test_nnls^2)
-          sum_squares_train[, j] <- colSums(residuals_train_nnls^2)
-        }
-      }
-
-      if (verbose) {
-        end_time <- Sys.time()
-        cli::cli_alert_success(paste(
-          "{.strong Step 2a:} Coefficients re-estimated",
-          cli::col_blue(
-            "(in ", prettyunits::pretty_dt(end_time - start_time), ")"
-          )
-        ))
-
-        start_time <- Sys.time()
-        cli::cli_status_update(
-          id = sb,
-          paste(
-            "{cli::symbol$arrow_right} {.strong Step 2b:}",
-            "Allocating clusters"
-          )
-        )
-      }
-
-      r2_test <- 1 - (
-        sum_squares_test / colSums(
-          scale(z2_target_scaled, center = TRUE, scale = FALSE)^2
-        )
-      )
-      best_r2[[cycle]] <- apply(r2_test, 1, max)
-
-      resid_var <- t(
-        t(sum_squares_train)
-        / (nrow(z1_target_scaled) - colSums(models))
-      )
 
       if (allocate_per_obs) {
         update_order <- sample(length(k), length(k)) - 1L
@@ -1568,9 +1587,10 @@ scregclust <- function(expression,
       )
     }
 
-
     cluster <- vector("list", final_cycle_length)
+    cluster_all <- vector("list", final_cycle_length)
     r2 <- vector("list", final_cycle_length)
+    r2_idx <- vector("list", final_cycle_length)
     reg_table <- vector("list", final_cycle_length)
     r2_removed <- vector("list", final_cycle_length)
     r2_cluster <- vector("list", final_cycle_length)
@@ -1735,32 +1755,49 @@ scregclust <- function(expression,
         })
       }
 
-      # "Hack" to put regulators in tentative cluster
-      k_ <- k
-      k_[k == -1L] <- n_cl + 1L
-      non_empty_clusters <- which(sapply(
-        seq_len(n_cl + 1L), function(j) sum(k_ == j) > 0
-      ))
-      cluster_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
+      # # "Hack" to put regulators in tentative cluster
+      # k_ <- k
+      # k_[k == -1L] <- n_cl + 1L
+      # non_empty_clusters <- which(sapply(
+      #   seq_len(n_cl + 1L), function(j) sum(k_ == j) > 0
+      # ))
+      # cluster_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
 
-      idx <- non_empty_clusters[apply(
-        diag(
-          1 / Matrix::colSums(cluster_indicator)[non_empty_clusters],
-          nrow = length(non_empty_clusters)
-        )
-        %*% t(cluster_indicator[, non_empty_clusters])
-        %*% cross_corr2,
-        2,
-        which.max
-      )]
-      idx[idx == n_cl + 1L] <- -1L
+      # idx <- non_empty_clusters[apply(
+      #   diag(
+      #     1 / Matrix::colSums(cluster_indicator)[non_empty_clusters],
+      #     nrow = length(non_empty_clusters)
+      #   )
+      #   %*% t(cluster_indicator[, non_empty_clusters])
+      #   %*% cross_corr2,
+      #   2,
+      #   which.max
+      # )]
+      # idx[idx == n_cl + 1L] <- -1L
 
-      cluster[[m]] <- rep.int(0, ncol(z1_reg_scaled) + ncol(z1_target_scaled))
-      cluster[[m]][is_regulator == 1L] <- idx
+      cluster[[m]] <- rep.int(
+        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+      )
+      # cluster[[m]][is_regulator == 1L] <- idx
       cluster[[m]][is_regulator == 0L] <- k
 
+      # Put rag bag genes into closest cluster dependent on R2 value
+      # Leave all other genes in their allocated clusters
+      cluster_all[[m]] <- rep.int(
+        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+      )
+      cluster_all[[m]][is_regulator == 0L] <- k
+      cluster_all[[m]][is_regulator == 0L][k == -1L] <- (
+        best_r2_idx_final[[m]][k == -1L]
+      )
+
       r2[[m]] <- rep.int(NA_real_, ncol(z1_reg_scaled) + ncol(z1_target_scaled))
-      r2[[m]][is_regulator == 0] <- best_r2[[cycle - m]]
+      r2[[m]][is_regulator == 0] <- best_r2_final[[m]]
+
+      r2_idx[[m]] <- rep.int(
+        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+      )
+      r2_idx[[m]][is_regulator == 0] <- best_r2_idx_final[[m]]
 
       max_corr <- matrix(0, nrow = ncol(cross_corr1), ncol = n_cl)
       for (i in seq_len(n_cl)) {
@@ -1809,7 +1846,10 @@ scregclust <- function(expression,
         structure(list(
           reg_table = reg_table[[m]],
           cluster = cluster[[m]],
-          r2 = r2[[m]],
+          cluster_all = cluster_all[[m]],
+          r2 = r2_final[[m]], # predicte R2 for each target gene and cluster
+          best_r2 = r2[[m]], # best predictive R2 for each gene
+          best_r2_idx = r2_idx[[m]], # cluster index of best r2
           r2_cluster = r2_cluster[[m]],
           importance = importance[[m]],
           r2_cross_cluster_per_target = r2_cross_cluster_per_target[[m]],

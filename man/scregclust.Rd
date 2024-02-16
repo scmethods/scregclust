@@ -186,12 +186,19 @@ a list with the following contents:
 \describe{
 \item{\code{reg_table}}{a regulator table, a matrix of weights for each
 regulator and cluster}
-\item{\code{cluster}}{the cluster assignments for all genes (including
-regulators); regulators are placed in clusters with the
-highest accumulated correlation between target genes
-and regulators}
-\item{\code{r2}}{best predictive \eqn{R^2} value for each target gene across
-all clusters}
+\item{\code{cluster}}{the cluster assignments for all genes with regulators
+marked as \code{NA}}
+\item{\code{cluster_all}}{the cluster assignments for all genes with regulators
+marked as \code{NA}. Genes that are in the rag-bag cluster
+(marked with -1 in \code{cluster}) are assigned to the
+existing cluster in which it has the largest
+\eqn{R^2}, even if it is below \code{noise_threshold}.}
+\item{\code{r2}}{matrix of predictive \eqn{R^2} value for each target gene and
+cluster}
+\item{\code{best_r2}}{vector of best predictive \eqn{R^2} for each gene
+(regulators marked with NA)}
+\item{\code{best_r2_idx}}{cluster index coreesponding to best predictive
+\eqn{R^2} for each gene (regulators marked with NA)}
 \item{\code{r2_cluster}}{a vector of predictive \eqn{R^2} values for each
 cluster (included if \code{compute_predictive_r2 == TRUE})}
 \item{\code{importance}}{a matrix of importance values for each regulator (rows)
@@ -209,9 +216,9 @@ regulators in rows and clusters in columns}
 regulators in rows and clusters in columns}
 \item{\code{weights}}{average regulator coefficient for each cluster}
 \item{\code{coeffs}}{list of regulator coefficient matrices for each cluster
-as estimated in the coop-Lasso step}
-\item{\code{sigmas}}{list of vectors of residual variances, one per target gene
-in each cluster}
+for all target genes as re-estimated in the NNLS step}
+\item{\code{sigmas}}{matrix of residual variances, one per target gene
+in each cluster; derived from the residuals in NNLS step}
 }
 }
 \description{
