@@ -1,0 +1,8 @@
+bibentry(
+  bibtype  = "Article",
+  title    = "Reconstructing the regulatory programs underlying the phenotypic plasticity of neural cancers",
+  author   = "Ida Larsson, Felix Held, Gergana Popova, Alper Koc, Rebecka Jörnsten, Sven Nelander",
+  journal  = "bioRxiv",
+  year     = "2023",
+  doi      = "10.1101/2023.03.10.532041"
+)
