@@ -23,6 +23,7 @@ Imports:
     reshape,
     igraph,
     graphics,
+    grid,
     cli,
     prettyunits,
     ggplot2,
