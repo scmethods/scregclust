@@ -1847,7 +1847,7 @@ scregclust <- function(expression,
           reg_table = reg_table[[m]],
           cluster = cluster[[m]],
           cluster_all = cluster_all[[m]],
-          r2 = r2_final[[m]], # predicte R2 for each target gene and cluster
+          r2 = r2_final[[m]], # predictive R2 for each target gene and cluster
           best_r2 = r2[[m]], # best predictive R2 for each gene
           best_r2_idx = r2_idx[[m]], # cluster index of best r2
           r2_cluster = r2_cluster[[m]],

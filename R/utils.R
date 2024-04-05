@@ -189,10 +189,10 @@ count_table <- function(counts,
 #'                  returned as 1 while all others receive the entry 0.
 #'
 #' @return A list of vectors describing a sparse lower triangular pattern matrix
-#'      {i}{Row indices}
-#'      {j}{Column indices}
+#'      \item{i}{Row indices}
+#'      \item{j}{Column indices}
 #'
-#' @export
+#' @keywords internal
 jaccard_indicator <- function(x, upper_bnd = 0.8) {
   # Treat matrix as sparse pattern matrix
   x <- methods::as(x, "ngCMatrix")
@@ -383,6 +383,8 @@ find_cluster_sizes <- function(k, n_cl) {
 #' @param k Vector of cluster indices
 #'
 #' @return The updated vector of cluster indices with empty clusters removed.
+#'
+#' @keywords internal
 update_cluster_indices <- function(k) {
   k_ <- k
   if (max(k) > length(unique(k[k > 0]))) {

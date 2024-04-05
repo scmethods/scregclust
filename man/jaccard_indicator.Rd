@@ -14,11 +14,12 @@ returned as 1 while all others receive the entry 0.}
 }
 \value{
 A list of vectors describing a sparse lower triangular pattern matrix
-{i}{Row indices}
-{j}{Column indices}
+\item{i}{Row indices}
+\item{j}{Column indices}
 }
 \description{
 Computes the Jaccard distance between rows of a matrix and returns a
 sparse symmetric indicator matrix containing the entries with a distance
 of less than a given upper bound. Note that the diagonal is always 1.
 }
+\keyword{internal}

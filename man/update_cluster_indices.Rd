@@ -19,3 +19,4 @@ Remove empty clusters
 Only iterates through clusters with positive index, leaving the noise
 cluster untouched.
 }
+\keyword{internal}
