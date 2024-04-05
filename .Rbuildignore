@@ -10,3 +10,6 @@ overview_fig1A.png
 .rds$
 ^doc$
 ^Meta$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
