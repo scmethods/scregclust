@@ -2,7 +2,7 @@
 title: "Demonstration of workflow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{pbmc}
+  %\VignetteIndexEntry{Demonstration of workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,14 +17,14 @@ knitr::opts_chunk$set(
 The methods below are described in our article
 
 > Larsson I & Held F, et al. (2023) Reconstructing the regulatory programs
-> underlying the > phenotypic plasticity of neural cancers. Preprint available
+> underlying the phenotypic plasticity of neural cancers. Preprint available
 > at [bioRxiv](https://www.biorxiv.org/content/10.1101/2023.03.10.532041v1);
 > 2023.03.10.532041.
 
 Here we demonstrate the scregclust workflow using the PBMC data from
-10X Genomics (available [here](https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-3-k-1-standard-2-0-0).
-This is the same data used in an [introductory vignette](https://satijalab.org/seurat/articles/pbmc3k_tutorial) for the
-Seurat package. We use [Seurat](https://satijalab.org/seurat/) for
+10X Genomics (available [here](https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-3-k-1-standard-2-0-0)).
+This is the same data used in an [introductory vignette](https://satijalab.org/seurat/articles/pbmc3k_tutorial)
+for the Seurat package. We use [Seurat](https://satijalab.org/seurat/) for
 pre-processing of the data.
 
 ```{r load-packages, results='hide', message=FALSE}
@@ -51,7 +51,7 @@ url <- paste0(
 )
 path <- "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"
 
-download.file(url, path)
+download.file(url, path, cacheOK = FALSE, mode = "wb")
 ```
 
 # Load the data in Seurat and preprocess
@@ -60,8 +60,8 @@ To perform preprocessing use Seurat to load the data. The file ships with
 two modalities, "Gene Expression" and "Peaks". We only use the former.
 
 ```{r load-h5}
-pbmcData <- Read10X_h5(
-  'pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5',
+pbmc_data <- Read10X_h5(
+  "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5",
   use.names = TRUE,
   unique.features = TRUE
 )[["Gene Expression"]]
@@ -72,7 +72,7 @@ cells and features (genes).
 
 ```{r create-seurat-object}
 pbmc <- CreateSeuratObject(
-  counts = pbmcData, min.cells = 3, min.features = 200
+  counts = pbmc_data, min.cells = 3, min.features = 200
 )
 
 pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT.")
@@ -83,10 +83,10 @@ pbmc <- subset(pbmc, subset = percent.mt < 30 & nFeature_RNA < 6000)
 used for variance stabilization of the data and Pearson residuals for the
 6000 most variable genes are extracted as matrix `z`.
 
-```{r apply-var-stabilization, cache=TRUE, message=FALSE}
+```{r apply-var-stabilization}
 pbmc <- SCTransform(pbmc, variable.features.n = 6000)
 
-z <- GetAssayData(pbmc, layer = 'scale.data')
+z <- GetAssayData(pbmc, layer = "scale.data")
 dim(z)
 ```
 
@@ -115,7 +115,7 @@ is_regulator <- out$is_regulator
 Run `scregclust` with number of initial clusters set to 10 and test
 several penalties. `noise_threshold` controls the minimum $R^2$ a gene has
 to achieve across clusters. Otherwise it is placed in the noise/rag-bag cluster.
-The run can be reproduced with the command below. A fitted model can be
+The run can be reproduced with the command below. A pre-fitted model can be
 downloaded from [GitHub](https://github.com/sven-nelander/scregclust/raw/main/datasets/pbmc_scregclust.rds)
 for convenience.
 
@@ -123,7 +123,7 @@ for convenience.
 # set.seed(8374)
 # fit <- scregclust(
 #   z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.1),
-#   n_cl = 10L, n_cycles = 50L, noise_threshold = 0.05, center=FALSE,
+#   n_cl = 10L, n_cycles = 50L, noise_threshold = 0.05, center = FALSE,
 #   sample_assignment = sample_assignment
 # )
 
