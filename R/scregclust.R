@@ -248,6 +248,21 @@ scregclust <- function(expression,
     is_regulator <- as.logical(is_regulator)
   }
 
+  if (sum(is_regulator) == 0) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
+    cli::cli_abort(c(
+      paste(
+        "At least one regulator needs to be present in the dataset."
+      ),
+      "i" = paste(
+        "{.var is_regulator} is not equal to TRUE/1 for any gene.",
+      )
+    ))
+  }
+
   if (!(
     is.numeric(penalization)
     && length(penalization) >= 1L
