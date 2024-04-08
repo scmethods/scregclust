@@ -2,7 +2,7 @@ datasets
 scripts
 LICENSE\.md
 compile_flags.txt
-overview_fig1A.png
+^man/figures
 .RData$
 ^vignettes/pbmc_cache
 ^vignettes/pbmc_files
@@ -13,3 +13,4 @@ overview_fig1A.png
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^index\.md$

@@ -1,4 +1,33 @@
 url: ~
 template:
   bootstrap: 5
-
+reference:
+- title: "Setting up and performing clustering"
+  desc: >
+    Functions to prepare the input data and to perform single-cell
+    regulatory-driven clustering.
+  contents:
+  - scregclust_format
+  - scregclust
+- title: "Plotting and evaluation"
+  desc: >
+    Functions which help in plotting and evaluating results.
+  contents:
+  - plot_cluster_count_helper
+  - plot_regulator_network
+  - plot_silhouettes
+- title: "Utility functions"
+  desc: >
+    Functions that make accessing aspects of the results easier.
+  contents:
+  - get_target_clusters
+  - get_regulator_list
+  - get_rand_indices
+  - get_num_final_configs
+  - get_avg_num_regulators
+- title: "Other helpers"
+  contents:
+  - available_results
+  - cluster_overlap
+  - find_cluster_sizes
+  - fast_cor
