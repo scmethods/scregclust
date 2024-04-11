@@ -967,7 +967,7 @@ scregclust <- function(expression,
     z2_reg, colMeans(z1_reg), apply(z1_reg, 2, sd)
   )
 
-  # n_target <- ncol(z1_target_scaled) # number of targets
+  n_target <- ncol(z1_target_scaled) # number of targets
   n_reg <- ncol(z1_reg_scaled) # number of predictors
 
   # Remove unnecessary variables to save memory
@@ -1002,6 +1002,21 @@ scregclust <- function(expression,
   )
 
   prior_indicator_list <- prior_indicator_tmp
+
+  # Pre-compute target gene standard deviation
+  beta_ols <- coef_ols(z1_target_scaled, z1_reg_scaled)
+
+  # Estimate residual standard deviation for each response
+  z1_target_scaled_res_sds <- sqrt(
+    colSums((z1_target_scaled - z1_reg_scaled %*% beta_ols)^2)
+    / (nrow(z1_target_scaled) - ncol(z1_reg_scaled))
+  )
+
+  base_ws <- sqrt(sqrt(rowSums((
+    beta_ols %*% diag(
+      1 / z1_target_scaled_res_sds, nrow = n_target, ncol = n_target
+    )
+  )^2)))
 
   # Pre-compute cross-correlation matrices
   cross_corr1 <- fast_cor(z1_target_scaled, z1_reg_scaled)
@@ -1221,31 +1236,15 @@ scregclust <- function(expression,
           n_target_cl <- ncol(z1_target_scaled_cl) # number of cluster genes
 
           if (n_target_cl > 0) {
-            beta_ols <- coef_ols(z1_target_scaled_cl, z1_reg_scaled)
-
-            # Estimate residual standard deviation for each response
-            z1_target_res_sds <- sqrt(
-              colSums((z1_target_scaled_cl - z1_reg_scaled %*% beta_ols)^2)
-              / (nrow(z1_target_scaled_cl) - ncol(z1_reg_scaled))
-            )
-
-            ws <- rep.int(sqrt(n_target_cl), n_reg) / sqrt(
-              sqrt(rowSums((
-                beta_ols
-                %*% diag(
-                  1 / z1_target_res_sds,
-                  nrow = n_target_cl,
-                  ncol = n_target_cl
-                )
-              )^2))
-            )
+            # Compute weights based on OLS residual standard deviation
+            ws <- rep.int(sqrt(n_target_cl), n_reg) / base_ws
 
             admm_fit <- coop_lasso(
               (
                 (
                   z1_target_scaled_cl
                   %*% diag(
-                    1 / z1_target_res_sds,
+                    1 / z1_target_scaled_res_sds[k == j],
                     nrow = n_target_cl,
                     ncol = n_target_cl
                   )
@@ -1261,7 +1260,7 @@ scregclust <- function(expression,
 
             beta <- (
               admm_fit$beta %*% diag(
-                z1_target_res_sds,
+                z1_target_scaled_res_sds[k == j],
                 nrow = n_target_cl,
                 ncol = n_target_cl
               )
