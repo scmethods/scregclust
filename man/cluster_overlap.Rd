@@ -19,3 +19,4 @@ the columns and the labels of \code{k2} in the rows.
 Compares two clusterings and creates a table of overlap between them.
 Cluster labels do not have to match.
 }
+\concept{helpers}

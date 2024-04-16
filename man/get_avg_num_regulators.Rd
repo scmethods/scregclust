@@ -16,3 +16,4 @@ per cluster for each penalization parameter.
 \description{
 Get the average number of active regulators per cluster
 }
+\concept{utilities}

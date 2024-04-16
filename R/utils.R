@@ -326,7 +326,9 @@ kmeanspp_init <- function(n_cluster, x = NULL, dm = NULL) {
 #' Symposium on Discrete Algorithms, SODA '07, pages 1027––1035.
 #' Society for Industrial and Applied Mathematics, 2007.
 #'
-#' @keywords internal
+#' @concept helpers
+#'
+#' @export
 kmeanspp <- function(x, n_cluster, n_init_clusterings = 10L, n_max_iter = 10L) {
   dm <- dist(x)
   initial_center_indices <- lapply(
@@ -360,6 +362,8 @@ kmeanspp <- function(x, n_cluster, n_init_clusterings = 10L, n_max_iter = 10L) {
 #'
 #' @return A named vector containining the name of the cluster (its index or
 #'         `"Noise"`) and the number of elements in that cluster
+#'
+#' @concept helpers
 #'
 #' @export
 find_cluster_sizes <- function(k, n_cl) {
@@ -408,6 +412,8 @@ update_cluster_indices <- function(k) {
 #'         parameter in `penalization`. The lists contain the clustering of
 #'         target genes for each final configuration.
 #'
+#' @concept utilities
+#'
 #' @export
 get_target_clusters <- function(fit, penalization = NULL) {
   if (!all(penalization %in% fit$penalization)) {
@@ -448,6 +454,8 @@ get_target_clusters <- function(fit, penalization = NULL) {
 #' @return A matrix showing the cluster overlap with the labels of `k1` in
 #'         the columns and the labels of `k2` in the rows.
 #'
+#' @concept helpers
+#'
 #' @export
 cluster_overlap <- function(k1, k2) {
   if (length(k1) != length(k2)) {
@@ -478,6 +486,8 @@ cluster_overlap <- function(k1, k2) {
 #' @return A [`data.frame`] containing penalization parameters and
 #'         final configurations for those penalizations.
 #'
+#' @concept helpers
+#'
 #' @export
 available_results <- function(obj) {
   data.frame(
@@ -497,6 +507,8 @@ available_results <- function(obj) {
 #' @param y second input matrix
 #'
 #' @return Correlations matrix between the columns of `x` and `y`
+#'
+#' @concept helpers
 #'
 #' @export
 fast_cor <- function(x, y) {
@@ -519,6 +531,8 @@ fast_cor <- function(x, y) {
 #' @return An integer vector containing the number of final configurations
 #'         for each penalization parameter.
 #'
+#' @concept utilities
+#'
 #' @export
 get_num_final_configs <- function(fit) {
   sapply(fit$results, function(r) length(r$output))
@@ -530,6 +544,8 @@ get_num_final_configs <- function(fit) {
 #'
 #' @return A [`data.frame`] containing the average number of active regulators
 #'         per cluster for each penalization parameter.
+#'
+#' @concept utilities
 #'
 #' @export
 get_avg_num_regulators <- function(fit) {
@@ -642,6 +658,8 @@ compute_adjusted_rand_index <- function(k1, k2) {
 #'
 #' Lawrence Hubert and Phipps Arabie (1985). "Comparing partitions".
 #' Journal of Classification. 2 (1): 193–218. DOI:10.1007/BF01908075
+#'
+#' @concept utilities
 #'
 #' @export
 get_rand_indices <- function(fit, groundtruth, adjusted = TRUE) {

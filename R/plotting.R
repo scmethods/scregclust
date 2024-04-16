@@ -10,6 +10,8 @@
 #'
 #' @return Graph with gene modules and regulators as nodes
 #'
+#' @concept plotting
+#'
 #' @export
 plot_regulator_network <- function(output,
                                    arrow_size = 0.3,
@@ -132,6 +134,8 @@ plot_regulator_network <- function(output,
   )
 }
 
+#' @concept plotting
+#'
 #' @export
 plot.scregclust <- function(x, ...) {
   r2_cluster_data <- do.call(rbind, lapply(x$results, function(r) {
@@ -254,6 +258,9 @@ collect_silhouette_data <- function(list_of_fits) {
 #'
 #' @return A [`ggplot2`] plot showing the the silhouette scores for each
 #'         supplied fit.
+#'
+#' @concept plotting
+#'
 #' @export
 plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
   if (!(
@@ -405,6 +412,8 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
 #'
 #' @return A [ggplot2] plot showing the average silhouette score and the
 #'         average predictive \eqn{R^2}
+#'
+#' @concept plotting
 #'
 #' @export
 plot_cluster_count_helper <- function(list_of_fits, penalization) {

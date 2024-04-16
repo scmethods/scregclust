@@ -158,6 +158,8 @@
 #'                   in each cluster; derived from the residuals in NNLS step}
 #' }
 #'
+#' @concept main
+#'
 #' @export
 scregclust <- function(expression,
                        genesymbols,
@@ -2128,6 +2130,8 @@ split_sample <- function(z, stratification, is_regulator, split_indices,
 #'
 #' @seealso [get_regulator_list()]
 #'
+#' @concept main
+#'
 #' @export
 scregclust_format <- function(expression_matrix, mode = c("TF", "kinase")) {
   regulators <- get_regulator_list(mode)
@@ -2152,6 +2156,8 @@ scregclust_format <- function(expression_matrix, mode = c("TF", "kinase")) {
 #'             Currently supports TF=transcription factors and kinases.
 #' @return a list of gene symbols
 #' @seealso [scregclust_format()]
+#'
+#' @concept utilities
 #'
 #' @export
 get_regulator_list <- function(mode = c("TF", "kinase")) {

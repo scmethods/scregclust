@@ -2,39 +2,34 @@ url: https://scmethods.github.io/scregclust/
 template:
   bootstrap: 5
 navbar:
-  structure:
-  components:
-    articles:
-      text: Vignettes
+  title: scregclust
+  left:
+    - text: Reference
+      href: reference/index.html
+    - text: Vignettes
       menu:
       - text: Demonstration of workflow
         href: articles/pbmc.html
+  right:
+    - icon: fa-github
+      href: https://github.com/scmethods/scregclust
+      aria-label: GitHub
 reference:
 - title: Setting up and performing clustering
   desc: |
     Functions to prepare the input data and to perform single-cell regulatory-driven clustering.
-  contents:
-  - scregclust_format
-  - scregclust
+- contents:
+  - has_concept("main") 
 - title: Plotting and evaluation
   desc: |
     Functions which help in plotting and evaluating results.
-  contents:
-  - plot_cluster_count_helper
-  - plot_regulator_network
-  - plot_silhouettes
+- contents:
+  - has_concept("plotting")
 - title: Utility functions
   desc: |
     Functions that make accessing aspects of the results easier.
-  contents:
-  - get_target_clusters
-  - get_regulator_list
-  - get_rand_indices
-  - get_num_final_configs
-  - get_avg_num_regulators
+- contents:
+  - has_concept("utilities")
 - title: Other helpers
-  contents:
-  - available_results
-  - cluster_overlap
-  - find_cluster_sizes
-  - fast_cor
+- contents:
+  - has_concept("helpers")

@@ -21,3 +21,4 @@ average predictive \eqn{R^2}
 \description{
 Plot average silhouette scores and average predictive \eqn{R^2}
 }
+\concept{plotting}

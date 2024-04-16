@@ -21,3 +21,4 @@ the built-in \code{cor} function.
 \details{
 Computes the correlation between the columns of \code{x} and \code{y}.
 }
+\concept{helpers}

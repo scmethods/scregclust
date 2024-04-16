@@ -21,3 +21,4 @@ target genes for each final configuration.
 \description{
 Extract target gene clusters for given penalization parameters
 }
+\concept{utilities}

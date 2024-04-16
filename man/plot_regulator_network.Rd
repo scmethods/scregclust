@@ -32,3 +32,4 @@ Graph with gene modules and regulators as nodes
 \description{
 Plotting the regulatory table from scregclust as a directed graph
 }
+\concept{plotting}

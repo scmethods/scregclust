@@ -14,6 +14,8 @@ Computational methods for the scregclust algorithm
 Useful links:
 \itemize{
   \item \url{https://scmethods.github.io/scregclust/}
+  \item \url{https://github.com/scmethods/scregclust/}
+  \item Report bugs at \url{https://github.com/scmethods/scregclust/issues}
 }
 
 }

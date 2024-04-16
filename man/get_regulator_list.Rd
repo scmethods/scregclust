@@ -19,3 +19,4 @@ Return list of regulator genes
 \seealso{
 \code{\link[=scregclust_format]{scregclust_format()}}
 }
+\concept{utilities}

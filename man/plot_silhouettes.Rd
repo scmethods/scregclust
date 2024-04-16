@@ -25,3 +25,4 @@ supplied fit.
 \description{
 Plot individual silhouette scores
 }
+\concept{plotting}

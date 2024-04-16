@@ -17,3 +17,4 @@ for each penalization parameter.
 Returns the number of final configurations per penalization parameter in an
 scRegClust object.
 }
+\concept{utilities}

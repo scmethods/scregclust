@@ -18,3 +18,4 @@ A named vector containining the name of the cluster (its index or
 \description{
 Determine cluster sizes
 }
+\concept{helpers}

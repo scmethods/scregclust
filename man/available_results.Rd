@@ -16,3 +16,4 @@ final configurations for those penalizations.
 \description{
 Extract final configurations into a data frame
 }
+\concept{helpers}
