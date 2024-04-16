@@ -49,7 +49,14 @@
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off">
 </form>
 
-      <ul class="navbar-nav"></ul>
+      <ul class="navbar-nav">
+<li class="nav-item">
+  <a class="external-link nav-link" href="https://github.com/scmethods/scregclust/" aria-label="github">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
 </div>
 
     
@@ -64,7 +71,7 @@
       <img src="" class="logo" alt=""><h1>Demonstration of workflow</h1>
             
       
-      
+      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/HEAD/vignettes/pbmc.Rmd" class="external-link"><code>vignettes/pbmc.Rmd</code></a></small>
       <div class="d-none name"><code>pbmc.Rmd</code></div>
     </div>
 
@@ -136,15 +143,178 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <span><span class="co">#&gt; Running SCTransform on assay: RNA</span></span>
 <span><span class="co">#&gt; Running SCTransform on layer: counts</span></span>
 <span><span class="co">#&gt; vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.</span></span>
+<span><span class="co">#&gt; `vst.flavor` is set to 'v2' but could not find glmGamPoi installed.</span></span>
+<span><span class="co">#&gt; Please install the glmGamPoi package for much faster estimation.</span></span>
+<span><span class="co">#&gt; --------------------------------------------</span></span>
+<span><span class="co">#&gt; install.packages('BiocManager')</span></span>
+<span><span class="co">#&gt; BiocManager::install('glmGamPoi')</span></span>
+<span><span class="co">#&gt; --------------------------------------------</span></span>
+<span><span class="co">#&gt; Falling back to native (slower) implementation.</span></span>
 <span><span class="co">#&gt; Variance stabilizing transformation of count matrix of size 19168 by 2686</span></span>
 <span><span class="co">#&gt; Model formula is y ~ log_umi</span></span>
 <span><span class="co">#&gt; Get Negative Binomial regression parameters per gene</span></span>
 <span><span class="co">#&gt; Using 2000 genes, 2686 cells</span></span>
-<span><span class="co">#&gt; Found 8 outliers - those will be ignored in fitting/regularization step</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in glm.nb(formula = as.formula(new_formula), data = data): alternation</span></span>
+<span><span class="co">#&gt; limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Warning in theta.ml(Y, mu, sum(w), w, limit = control$maxit, trace =</span></span>
+<span><span class="co">#&gt; control$trace &gt; : iteration limit reached</span></span>
+<span><span class="co">#&gt; Warning in sqrt(1/i): NaNs produced</span></span>
+<span><span class="co">#&gt; Found 14 outliers - those will be ignored in fitting/regularization step</span></span>
 <span><span class="co">#&gt; Second step: Get residuals using fitted parameters for 19168 genes</span></span>
 <span><span class="co">#&gt; Computing corrected count matrix for 19168 genes</span></span>
 <span><span class="co">#&gt; Calculating gene attributes</span></span>
-<span><span class="co">#&gt; Wall clock passed: Time difference of 23.63094 secs</span></span>
+<span><span class="co">#&gt; Wall clock passed: Time difference of 2.223406 mins</span></span>
 <span><span class="co">#&gt; Determine variable features</span></span>
 <span><span class="co">#&gt; Centering data matrix</span></span>
 <span><span class="co">#&gt; Set default assay to SCT</span></span>
