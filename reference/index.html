@@ -31,8 +31,8 @@
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
       <ul class="navbar-nav"><li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/scmethods/scregclust/" aria-label="github">
-    <span class="fab fa fab fa-github fa-lg"></span>
+  <a class="external-link nav-link" href="https://github.com/scmethods/scregclust" aria-label="GitHub">
+    <span class="fa fa-github"></span>
      
   </a>
 </li>
@@ -59,14 +59,14 @@
 
       <dl><dt>
           
-          <code><a href="scregclust_format.html">scregclust_format()</a></code> 
-        </dt>
-        <dd>Package data before clustering</dd>
-      </dl><dl><dt>
-          
           <code><a href="scregclust.html">scregclust()</a></code> 
         </dt>
         <dd>Uncover gene modules and their regulatory programs from single-cell data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="scregclust_format.html">scregclust_format()</a></code> 
+        </dt>
+        <dd>Package data before clustering</dd>
       </dl></div><div class="section level2">
       <h2 id="plotting-and-evaluation">Plotting and evaluation<a class="anchor" aria-label="anchor" href="#plotting-and-evaluation"></a></h2>
       
@@ -106,19 +106,9 @@
 
       <dl><dt>
           
-          <code><a href="get_target_clusters.html">get_target_clusters()</a></code> 
+          <code><a href="get_avg_num_regulators.html">get_avg_num_regulators()</a></code> 
         </dt>
-        <dd>Extract target gene clusters for given penalization parameters</dd>
-      </dl><dl><dt>
-          
-          <code><a href="get_regulator_list.html">get_regulator_list()</a></code> 
-        </dt>
-        <dd>Return list of regulator genes</dd>
-      </dl><dl><dt>
-          
-          <code><a href="get_rand_indices.html">get_rand_indices()</a></code> 
-        </dt>
-        <dd>Compute Rand indices</dd>
+        <dd>Get the average number of active regulators per cluster</dd>
       </dl><dl><dt>
           
           <code><a href="get_num_final_configs.html">get_num_final_configs()</a></code> 
@@ -126,9 +116,19 @@
         <dd>Return the number of final configurations</dd>
       </dl><dl><dt>
           
-          <code><a href="get_avg_num_regulators.html">get_avg_num_regulators()</a></code> 
+          <code><a href="get_rand_indices.html">get_rand_indices()</a></code> 
         </dt>
-        <dd>Get the average number of active regulators per cluster</dd>
+        <dd>Compute Rand indices</dd>
+      </dl><dl><dt>
+          
+          <code><a href="get_regulator_list.html">get_regulator_list()</a></code> 
+        </dt>
+        <dd>Return list of regulator genes</dd>
+      </dl><dl><dt>
+          
+          <code><a href="get_target_clusters.html">get_target_clusters()</a></code> 
+        </dt>
+        <dd>Extract target gene clusters for given penalization parameters</dd>
       </dl></div><div class="section level2">
       <h2 id="other-helpers">Other helpers<a class="anchor" aria-label="anchor" href="#other-helpers"></a></h2>
       
@@ -152,14 +152,19 @@
         <dd>Create a table of cluster overlap for two clusterings</dd>
       </dl><dl><dt>
           
+          <code><a href="fast_cor.html">fast_cor()</a></code> 
+        </dt>
+        <dd>Fast computation of correlation</dd>
+      </dl><dl><dt>
+          
           <code><a href="find_cluster_sizes.html">find_cluster_sizes()</a></code> 
         </dt>
         <dd>Determine cluster sizes</dd>
       </dl><dl><dt>
           
-          <code><a href="fast_cor.html">fast_cor()</a></code> 
+          <code><a href="kmeanspp.html">kmeanspp()</a></code> 
         </dt>
-        <dd>Fast computation of correlation</dd>
+        <dd>Perform the k-means++ algorithm</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
