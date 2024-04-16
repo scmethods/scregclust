@@ -2,7 +2,6 @@ datasets
 scripts
 LICENSE\.md
 compile_flags.txt
-^man/figures
 .RData$
 ^vignettes/pbmc_cache
 ^vignettes/pbmc_files
@@ -14,3 +13,4 @@ compile_flags.txt
 ^docs$
 ^pkgdown$
 ^index\.md$
+^\.github$

@@ -10,6 +10,13 @@ This package provides an implementation of our scRegClust algorithm (Larsson, He
 \details{
 Computational methods for the scregclust algorithm
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://scmethods.github.io/scregclust/}
+}
+
+}
 \author{
 Ida Larsson, Felix Held, Sven Nelander
 }
