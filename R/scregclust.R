@@ -1022,7 +1022,7 @@ scregclust <- function(expression,
 
   # Pre-compute cross-correlation matrices
   cross_corr1 <- fast_cor(z1_target_scaled, z1_reg_scaled)
-  cross_corr2 <- fast_cor(z2_target_scaled, z2_reg_scaled)
+  # cross_corr2 <- fast_cor(z2_target_scaled, z2_reg_scaled)
 
   # Initial cluster allocation
   if (is.null(target_cluster_start)) {
