@@ -37,7 +37,7 @@ Suggests:
     glmGamPoi,
     hdf5r
 LinkingTo: Rcpp, RcppEigen
-Remotes: bioc::release/glmGamPoi
+Remotes: bioc::glmGamPoi
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
