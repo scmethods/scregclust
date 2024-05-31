@@ -92,6 +92,7 @@
 #'                              cluster and regulator importance
 #' @param compute_silhouette Whether to compute silhouette scores for each
 #'                           target gene.
+#' @param nowarnings When turned on then no warning messages are shown.
 #' @param verbose Whether to print progress.
 #'
 #' @return A list with S3 class `scregclust` containing
@@ -188,6 +189,7 @@ scregclust <- function(expression,
                        tol_nnls = 1e-4,
                        compute_predictive_r2 = TRUE,
                        compute_silhouette = FALSE,
+                       nowarnings = FALSE,
                        verbose = TRUE) {
   ###############################
   # START input validation
@@ -216,7 +218,7 @@ scregclust <- function(expression,
       cl <- FALSE
     }
     cli::cli_abort(c(
-            "{.var genesymbols} needs to be of length {p}.",
+      "{.var genesymbols} needs to be of length {p}.",
       "x" = "Supplied vector has length {length(genesymbols)}.",
       "i" =
         "There needs to be one gene symbol for each gene in {.var expression}."
@@ -422,16 +424,19 @@ scregclust <- function(expression,
         cat("\n")
         cl <- FALSE
       }
-      cli::cli_abort(c(
-        "Too few cells.",
-        "x" = paste(
-          "Each data split needs to contain more cells than there",
-          "are regulators."
-        ),
-        "i" = "Number of regulators = {sum(is_regulator == 1)}",
-        "i" = "Elements in split 1 = {n_samples_split1}",
-        "i" = "Elements in split 2 = {n_samples_split2}"
-      ))
+      if (!nowarnings) {
+        cli::cli_inform(c(
+          "Few cells compared with regulators.",
+          "*" = paste(
+            "For optimal performance, each data split should contain more",
+            "cells than there are regulators."
+          ),
+          "*" = "Consider reducing the number of regulators.",
+          "i" = "Number of regulators = {sum(is_regulator == 1)}",
+          "i" = "Cells in split 1 = {n_samples_split1}",
+          "i" = "Cells in split 2 = {n_samples_split2}"
+        ))
+      }
     }
   } else {
     if (!(
@@ -461,16 +466,19 @@ scregclust <- function(expression,
         cat("\n")
         cl <- FALSE
       }
-      cli::cli_abort(c(
-        "Too few cells.",
-        "x" = paste(
-          "Each data split needs to contain more cells than there",
-          "are regulators."
-        ),
-        "i" = "Number of regulators = {sum(is_regulator == 1)}",
-        "i" = "Elements in split 1 = {sum(split_indices == 1, na.rm = TRUE)}",
-        "i" = "Elements in split 2 = {sum(split_indices == 2, na.rm = TRUE)}"
-      ))
+      if (!nowarnings) {
+        cli::cli_warn(c(
+          "Few cells compared with regulators.",
+          "*" = paste(
+            "For optimal performance, each data split should contain more",
+            "cells than there are regulators."
+          ),
+          "*" = "Consider reducing the number of regulators.",
+          "i" = "Number of regulators = {sum(is_regulator == 1)}",
+          "i" = "Cells in split 1 = {sum(split_indices == 1, na.rm = TRUE)}",
+          "i" = "Cells in split 2 = {sum(split_indices == 2, na.rm = TRUE)}"
+        ))
+      }
     }
   }
 
@@ -971,6 +979,8 @@ scregclust <- function(expression,
 
   n_target <- ncol(z1_target_scaled) # number of targets
   n_reg <- ncol(z1_reg_scaled) # number of predictors
+  n1 <- nrow(z1_target_scaled) # cells in first split
+  n2 <- nrow(z2_target_scaled) # cells in second split
 
   # Remove unnecessary variables to save memory
   z1_reg <- NULL
@@ -1005,17 +1015,68 @@ scregclust <- function(expression,
 
   prior_indicator_list <- prior_indicator_tmp
 
-  # Pre-compute target gene standard deviation
-  beta_ols <- coef_ols(z1_target_scaled, z1_reg_scaled)
+  if (n1 >= n_reg) {
+    # Default case: Enough cells to perform OLS
+
+    # Pre-compute target gene standard deviation
+    beta_ols <- coef_ols(z1_target_scaled, z1_reg_scaled)
+    init_df <- n_reg
+  } else {
+    # High-dimensional case. More regulators than cells in the first data split
+    # Use a residual variance estimator which is stable in p > n scenario
+    #
+    # Equations 15 and below in
+    #
+    # L. H. Dicker. Variance estimation in high-dimensional linear models.
+    # Biometrika, 101(2):269–284, 2014.
+    #
+    # Seem like a good choice but cannot figure out how make them
+    # always positive. Use ridge regression for now.
+
+    # m1 <- sum(z1_reg_scaled^2) / (n1 * n_reg)
+    # ztz <- crossprod(z1_reg_scaled)
+    # m2 <- (
+    #   sum((ztz / n1)^2) / n_reg
+    #   - sum(z1_reg_scaled^2)^2 / (n1 * n_reg * n1^2)
+    # )
+
+    # # Estimate residual standard deviation for each response
+    # # Complex correlation case
+    # z1_target_scaled_res_sds <- sqrt(
+    #   (1 + n_reg * m1^2 / ((n1 + 1) * m2)) / n1 * colSums(z1_target_scaled^2)
+    #   - m1 / (n1 * (n1 + 1) * m2)
+    #   * colSums(crossprod(z1_reg_scaled, z1_target_scaled)^2)
+    # )
+
+    # # Orthogonal predictors case
+    # z1_target_scaled_res_sds <- sqrt(
+    #   (n_reg + n1 + 1) / (n1 * (n1 + 1)) * colSums(z1_target_scaled^2)
+    #   - 1 / (n1 * (n1 + 1))
+    #   * colSums(crossprod(z1_reg_scaled, z1_target_scaled)^2)
+    # )
+
+    ztz <- crossprod(z1_reg_scaled)
+    es <- eigen(ztz, symmetric = TRUE, only.values = TRUE)$values
+
+    lambda_minimal <- es[n1 - 1] + 1e-4 # Minimal eigenvalue + fudge factor
+    # Effective degrees of freedom
+    init_df <- sum(es / (es + lambda_minimal))
+    while (init_df >= n1) {
+      lambda_minimal <- 2 * lambda_minimal
+      init_df <- sum(es / (es + lambda_minimal))
+    }
+
+    beta_init <- coef_ridge(z1_target_scaled, z1_reg_scaled, lambda_minimal)
+  }
 
   # Estimate residual standard deviation for each response
   z1_target_scaled_res_sds <- sqrt(
-    colSums((z1_target_scaled - z1_reg_scaled %*% beta_ols)^2)
-    / (nrow(z1_target_scaled) - ncol(z1_reg_scaled))
+    colSums((z1_target_scaled - z1_reg_scaled %*% beta_init)^2)
+    / (n1 - init_df)
   )
 
   base_ws <- sqrt(sqrt(rowSums((
-    beta_ols %*% diag(
+    beta_init %*% diag(
       1 / z1_target_scaled_res_sds, nrow = n_target, ncol = n_target
     )
   )^2)))
@@ -1077,7 +1138,7 @@ scregclust <- function(expression,
     # Pre-allocate large SSQ array to speed up computations below
     sq_residuals_test <- alloc_array(z2_target_scaled^2, n_cl)
     attr(sq_residuals_test, "dim") <- c(
-      n_cl, nrow(z2_target_scaled), ncol(z2_target_scaled)
+      n_cl, n2, n_target
     )
   } else {
     sq_residuals_test <- NULL
@@ -1205,9 +1266,9 @@ scregclust <- function(expression,
         # the final cycle configurations.
         k <- k_history[[length(k_history) - m + 1L]]
 
-        models <- matrix(FALSE, nrow = ncol(z1_reg_scaled), ncol = n_cl)
-        weights <- matrix(0, nrow = ncol(z1_reg_scaled), ncol = n_cl)
-        signs <- matrix(NA_real_, nrow = ncol(z1_reg_scaled), ncol = n_cl)
+        models <- matrix(FALSE, nrow = n_reg, ncol = n_cl)
+        weights <- matrix(0, nrow = n_reg, ncol = n_cl)
+        signs <- matrix(NA_real_, nrow = n_reg, ncol = n_cl)
 
         if (last_cycle) {
           coeffs_final[[m]] <- vector("list", n_cl)
@@ -1329,13 +1390,13 @@ scregclust <- function(expression,
         # for each gene is then just the squared response.
         sum_squares_train <- matrix(
           rep.int(colSums(z1_target_scaled^2), n_cl),
-          nrow = ncol(z1_target_scaled),
+          nrow = n_target,
           ncol = n_cl
         )
 
         sum_squares_test <- matrix(
           rep.int(colSums(z2_target_scaled^2), n_cl),
-          nrow = ncol(z2_target_scaled),
+          nrow = n_target,
           ncol = n_cl
         )
 
@@ -1368,6 +1429,21 @@ scregclust <- function(expression,
           # Get regulators used in cluster/model j
           reg_cl <- which(models[, j] == TRUE)
           if (length(reg_cl) > 0L) {
+            if (length(reg_cl) > n1 && !nowarnings) {
+              cli::cli_inform(c(
+                paste(
+                  "More selected regulators in cluster {j} than cells.",
+                  "Results may be instable."
+                ),
+                "i" = paste(
+                  "Consider reducing the number of regulators or increasing",
+                  "the penalty parameter."
+                ),
+                "i" = "Number of regulators = {length(reg_cl)}",
+                "i" = "Number of cells = {n1}"
+              ))
+            }
+
             z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
             z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
 
@@ -1388,8 +1464,8 @@ scregclust <- function(expression,
               z1_reg_scaled_cl_sign_corrected,
               z1_target_scaled %*% diag(
                 1 / z1_target_sds,
-                nrow = ncol(z1_target_scaled),
-                ncol = ncol(z1_target_scaled)
+                nrow = n_target,
+                ncol = n_target
               ),
               eps = tol_nnls, max_iter = max_optim_iter
             )$beta * signs_cl * z1_target_sds
@@ -1434,7 +1510,7 @@ scregclust <- function(expression,
 
         resid_var <- t(
           t(sum_squares_train)
-          / (nrow(z1_target_scaled) - colSums(models))
+          / (n1 - colSums(models))
         )
 
         if (last_cycle) {
@@ -1479,7 +1555,7 @@ scregclust <- function(expression,
 
         # Model log-likelihood
         model_log_likelihood <- (
-          nrow(z2_target_scaled) * log(2 * pi * resid_var)
+          n2 * log(2 * pi * resid_var)
           + sum_squares_test / resid_var
         )
 
@@ -1708,7 +1784,7 @@ scregclust <- function(expression,
         # Compute cross-cluster R2
         sum_squares_test <- matrix(
           rep.int(colSums(z2_target_scaled^2), n_cl),
-          nrow = ncol(z2_target_scaled),
+          nrow = n_target,
           ncol = n_cl
         )
 
@@ -1736,8 +1812,8 @@ scregclust <- function(expression,
               z1_reg_scaled_cl_sign_corrected,
               z1_target_scaled %*% diag(
                 1 / z1_target_sds,
-                nrow = ncol(z1_target_scaled),
-                ncol = ncol(z1_target_scaled)
+                nrow = n_target,
+                ncol = n_target
               ),
               eps = tol_nnls, max_iter = max_optim_iter
             )$beta * signs_cl * z1_target_sds
@@ -1792,7 +1868,7 @@ scregclust <- function(expression,
       # idx[idx == n_cl + 1L] <- -1L
 
       cluster[[m]] <- rep.int(
-        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+        NA_integer_, n_reg + n_target
       )
       # cluster[[m]][is_regulator == 1L] <- idx
       cluster[[m]][is_regulator == 0L] <- k
@@ -1800,18 +1876,18 @@ scregclust <- function(expression,
       # Put rag bag genes into closest cluster dependent on R2 value
       # Leave all other genes in their allocated clusters
       cluster_all[[m]] <- rep.int(
-        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+        NA_integer_, n_reg + n_target
       )
       cluster_all[[m]][is_regulator == 0L] <- k
       cluster_all[[m]][is_regulator == 0L][k == -1L] <- (
         best_r2_idx_final[[m]][k == -1L]
       )
 
-      r2[[m]] <- rep.int(NA_real_, ncol(z1_reg_scaled) + ncol(z1_target_scaled))
+      r2[[m]] <- rep.int(NA_real_, n_reg + n_target)
       r2[[m]][is_regulator == 0] <- best_r2_final[[m]]
 
       r2_idx[[m]] <- rep.int(
-        NA_integer_, ncol(z1_reg_scaled) + ncol(z1_target_scaled)
+        NA_integer_, n_reg + n_target
       )
       r2_idx[[m]][is_regulator == 0] <- best_r2_idx_final[[m]]
 

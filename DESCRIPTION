@@ -2,10 +2,10 @@ Package: scregclust
 Title: Reconstructing the regulatory programs of target genes in single cell data
 Version: 0.1.7
 Authors@R: c(
-    person("Ida", "Larsson", ,"ida.larsson@igp.uu.se", role = c("aut"),
-           comment = c(ORCID = "0000-0001-5422-4243")),
     person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7679-7752")),
+    person("Ida", "Larsson", ,"ida.larsson@igp.uu.se", role = c("aut"),
+           comment = c(ORCID = "0000-0001-5422-4243")),
     person("Sven", "Nelander", ,"sven.nelander@igp.uu.se", role = c("aut"),
            comment = c(ORCID = "0000-0003-1758-1262")))
 Description: This package provides an implementation of our scRegClust

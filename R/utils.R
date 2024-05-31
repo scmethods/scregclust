@@ -36,6 +36,26 @@ coef_ols <- function(y, x) {
   beta_ols
 }
 
+#' Compute ridge regression coefficients
+#'
+#'
+#' @param y Target vector (n x 1)/matrix (n x m)
+#' @param x Design matrix (n x p)
+#' @param lambda Positive parameter for ridge penalty
+#'
+#' @return Vector of ridge regression coefficients
+#'
+#' @keywords internal
+coef_ridge <- function(y, x, lambda) {
+  # Pre-compute quantities
+  p <- ncol(x)
+  xtx <- crossprod(x)
+  xty <- crossprod(x, y)
+
+  # Compute ridge regression solution directly
+  solve(xtx + diag(lambda, p, p), xty)
+}
+
 #' Quick'n'dirty progress bar
 #'
 #' Creates a progress bar and returns it as a string.
