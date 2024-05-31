@@ -1,6 +1,6 @@
 Package: scregclust
 Title: Reconstructing the regulatory programs of target genes in single cell data
-Version: 0.1.7
+Version: 0.1.8
 Authors@R: c(
     person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7679-7752")),
