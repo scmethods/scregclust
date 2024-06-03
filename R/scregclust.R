@@ -1019,7 +1019,7 @@ scregclust <- function(expression,
     # Default case: Enough cells to perform OLS
 
     # Pre-compute target gene standard deviation
-    beta_ols <- coef_ols(z1_target_scaled, z1_reg_scaled)
+    beta_init <- coef_ols(z1_target_scaled, z1_reg_scaled)
     init_df <- n_reg
   } else {
     # High-dimensional case. More regulators than cells in the first data split
