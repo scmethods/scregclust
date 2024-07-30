@@ -5,7 +5,7 @@
 \alias{scregclust-package}
 \title{scregclust: Reconstructing the regulatory programs of target genes in single cell data}
 \description{
-This package provides an implementation of our scRegClust algorithm (Larsson, Held, et al., 2023, \doi{10.1101/2023.03.10.532041}) which aims to reconstruct the regulatory programs of target genes in single cell data. Target genes are clustered and each cluster is associated with a linear model accounting for the regulatory program driving the genes in the cluster.
+This package provides an implementation of our scRegClust algorithm (Larsson, Held, et al., 2023, \doi{10.1101/2023.03.10.532041}) which aims to reconstruct the regulatory programs of target genes in single cell data. Target genes are clustered into modules and each module is associated with a linear model accounting for the regulatory program driving the genes it contains.
 }
 \details{
 Computational methods for the scregclust algorithm

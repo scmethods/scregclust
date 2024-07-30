@@ -8,7 +8,8 @@ plot_silhouettes(list_of_fits, penalization, final_config = 1L)
 }
 \arguments{
 \item{list_of_fits}{A list of \code{scregclust} objects each fit to the same
-dataset across a variety of cluster counts.}
+dataset across a variety of module counts (varying
+\code{n_modules} when running \code{\link{scregclust}}).}
 
 \item{penalization}{Either a single numeric value requesting the results
 for the same penalty parameter across all fits in

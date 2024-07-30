@@ -15,8 +15,6 @@ count_table(counts, title, row_names, col_width = 5)
 \item{row_names}{a vector of row names, one for each count vector}
 
 \item{col_width}{minimum width for columns}
-
-\item{n_cl}{number of clusters}
 }
 \value{
 A string formatted as a table

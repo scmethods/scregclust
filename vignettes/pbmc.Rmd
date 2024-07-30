@@ -90,7 +90,7 @@ z <- GetAssayData(pbmc, layer = "scale.data")
 dim(z)
 ```
 
-# Use scregclust for clustering
+# Use scregclust for clustering target genes into modules
 
 We then use `scregclust_format` which extracts gene symbols from the
 expression matrix and determines which genes are considered regulators.
@@ -102,9 +102,16 @@ regulators used internally is returned by `get_regulator_list()`.
 out <- scregclust_format(z, mode = "TF")
 ```
 
-`sample_assignment` is initialized to be a vector of `1`s of length `ncol(z)`
-and can be filled with a known sample grouping. Here, we do not use it and
-just keep it uniform across all cells.
+The output of `scregclust_format` is a list with three elements.
+
+1. `genesymbols` contains the rownames of `z`
+2. `sample_assignment` is initialized to be a vector of `1`s of length `ncol(z)`
+   and can be filled with a known sample grouping. Here, we do not use it and
+   just keep it uniform across all cells.
+3. `is_regulator` is an indicator vector (elements are 0 or 1) corresponding to 
+   the entries of `genesymbols` with 1 marking that the genesymbol is selected
+   as a regulator according to the model of `scregclust_format` (`"TF"` or
+   `"kinase"`) and 0 otherwise.
 
 ```{r extract-scregclust-arguments}
 genesymbols <- out$genesymbols
@@ -112,20 +119,23 @@ sample_assignment <- out$sample_assignment
 is_regulator <- out$is_regulator
 ```
 
-Run `scregclust` with number of initial clusters set to 10 and test
-several penalties. `noise_threshold` controls the minimum $R^2$ a gene has
-to achieve across clusters. Otherwise it is placed in the noise/rag-bag cluster.
+Run `scregclust` with number of initial modules set to 10 and test
+several penalties. The penalties provided to `penalization` are used during
+selection of regulators associated with each module. An increasing penalty
+implies the selection of fewer regulators.
+`noise_threshold` controls the minimum $R^2$ a gene has to achieve across
+modules. Otherwise the gene is marked as noise.
 The run can be reproduced with the command below. A pre-fitted model can be
 downloaded from [GitHub](https://github.com/sven-nelander/scregclust/raw/main/datasets/pbmc_scregclust.rds)
 for convenience.
 
 ```{r run-scregclust}
-# set.seed(8374)
-# fit <- scregclust(
-#   z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.1),
-#   n_cl = 10L, n_cycles = 50L, noise_threshold = 0.05, center = FALSE,
-#   sample_assignment = sample_assignment
-# )
+set.seed(8374)
+fit <- scregclust(
+  z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.1),
+  n_modules = 10L, n_cycles = 50L, noise_threshold = 0.05
+)
+saveRDS(fit, file = "pbmc_scregclust.rds")
 
 url <- paste0(
   "https://github.com/sven-nelander/scregclust/raw/main/datasets/",
@@ -149,10 +159,12 @@ plot(fit)
 The results for each penalization parameter are placed in a list, `results`,
 attached to the `fit` object. So `fit$results[[1]]` contains the results
 of running `scregclust` with `penalization = 0.1`. For each penalization
-parameter, the algorithm might end up finding multiple optimal clusterings.
-The results for each such clustering are contained in the list `output`.
+parameter, the algorithm might end up finding multiple optimal configurations.
+Each configuration describes target genes module assignments and which
+regulators are associated with which modules.
+The results for each such configuration are contained in the list `output`.
 This means that `fit$results[[1]]$output[[1]]` contains the results for
-the first final clustering. More than one may be available.
+the first final configuration. More than one may be available.
 
 ```{r n-configs}
 sapply(fit$results, function(r) length(r$output))
@@ -162,8 +174,8 @@ In this example, two final configurations were found for the lowest
 penalization and only a single configuration for all other penalization
 parameters.
 
-To plot the regulator network of the first clustering for `penalization = 0.1`
-the function `plot_regulator_network` can be used.
+To plot the regulator network of the first configuration for
+ `penalization = 0.1` the function `plot_regulator_network` can be used.
 
 ```{r viz-reg-network, fig.width=7, fig.height=7, fig.dpi=100}
 plot_regulator_network(fit$results[[1]]$output[[1]])

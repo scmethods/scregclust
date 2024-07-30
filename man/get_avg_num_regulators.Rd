@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{get_avg_num_regulators}
 \alias{get_avg_num_regulators}
-\title{Get the average number of active regulators per cluster}
+\title{Get the average number of active regulators per module}
 \usage{
 get_avg_num_regulators(fit)
 }
@@ -11,9 +11,9 @@ get_avg_num_regulators(fit)
 }
 \value{
 A \code{\link{data.frame}} containing the average number of active regulators
-per cluster for each penalization parameter.
+per module for each penalization parameter.
 }
 \description{
-Get the average number of active regulators per cluster
+Get the average number of active regulators per module
 }
 \concept{utilities}

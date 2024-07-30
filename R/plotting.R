@@ -138,21 +138,21 @@ plot_regulator_network <- function(output,
 #'
 #' @export
 plot.scregclust <- function(x, ...) {
-  r2_cluster_data <- do.call(rbind, lapply(x$results, function(r) {
+  r2_module_data <- do.call(rbind, lapply(x$results, function(r) {
     do.call(rbind, lapply(r$output, function(o) {
-      idx <- !is.na(o$r2_cluster)
+      idx <- !is.na(o$r2_module)
 
       data.frame(
         penalization = r$penalization,
-        cluster = seq_along(o$r2_cluster)[idx],
-        value = o$r2_cluster[idx]
+        module = seq_along(o$r2_module)[idx],
+        value = o$r2_module[idx]
       )
     }))
   }))
-  r2_cluster_data$penalization <- factor(
-    r2_cluster_data$penalization, levels = x$penalization
+  r2_module_data$penalization <- factor(
+    r2_module_data$penalization, levels = x$penalization
   )
-  r2_cluster_data$variable <- "r2-per-cluster"
+  r2_module_data$variable <- "r2-per-module"
 
   importance_data <- do.call(rbind, lapply(x$results, function(r) {
     do.call(rbind, lapply(seq_along(r$output), function(j) {
@@ -165,7 +165,7 @@ plot.scregclust <- function(x, ...) {
 
         data.frame(
           penalization = r$penalization,
-          cluster = i,
+          module = i,
           value = o$importance[idx, i]
         )
       }))
@@ -176,7 +176,7 @@ plot.scregclust <- function(x, ...) {
   )
   importance_data$variable <- "importance"
 
-  rbind(r2_cluster_data, importance_data) |>
+  rbind(r2_module_data, importance_data) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
       variable ~ .,
@@ -218,7 +218,7 @@ collect_silhouette_data <- function(list_of_fits) {
       r <- fit$results[[i]]
       do.call(rbind, lapply(seq_along(r$output), function(j) {
         o <- r$output[[j]]
-        k <- o$cluster[!r$is_regulator]
+        k <- o$module[!r$is_regulator]
 
         order_list <- lapply(seq_len(r$n_cl), function(cl) {
           if (sum(k == cl) > 0) {
@@ -235,7 +235,7 @@ collect_silhouette_data <- function(list_of_fits) {
           order = seq_len(sum(k != -1)),
           gene = gene,
           silhouette = o$silhouette[gene],
-          cluster = as.factor(k[gene]),
+          module = as.factor(k[gene]),
           n_cl = r$n_cl,
           output = j,
           penalization = r$penalization
@@ -248,7 +248,8 @@ collect_silhouette_data <- function(list_of_fits) {
 #' Plot individual silhouette scores
 #'
 #' @param list_of_fits A list of `scregclust` objects each fit to the same
-#'                     dataset across a variety of cluster counts.
+#'                     dataset across a variety of module counts (varying
+#'                     `n_modules` when running [`scregclust`]).
 #' @param penalization Either a single numeric value requesting the results
 #'                     for the same penalty parameter across all fits in
 #'                     `list_of_fits`, or one for each individual fit.
@@ -319,7 +320,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
   # }
 
   silhouette_data <- collect_silhouette_data(list_of_fits)
-  cluster_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
+  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
 
   silhouette_data$n_cl_lbl <- as.factor(sprintf("K = %d", silhouette_data$n_cl))
 
@@ -329,9 +330,9 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     ]
   } else {
     silhouette_data <- do.call(rbind, lapply(
-      seq_along(cluster_counts),
+      seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == cluster_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
         df[df$penalization == penalization[i]]
       }
     ))
@@ -343,31 +344,31 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     ]
   } else {
     silhouette_data <- do.call(rbind, lapply(
-      seq_along(cluster_counts),
+      seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == cluster_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
         df[df$output == final_config[i]]
       }
     ))
   }
 
-  cluster_centers <- do.call(rbind, lapply(cluster_counts, function(n_cl) {
+  module_centers <- do.call(rbind, lapply(module_counts, function(n_cl) {
     df <- silhouette_data[silhouette_data$n_cl == n_cl, ]
-    contained_clusters <- unique(df$cluster)
+    contained_modules <- unique(df$module)
 
     data.frame(
       n_cl = n_cl,
-      cluster = contained_clusters,
-      order =  sapply(contained_clusters, function(cl) {
-        mean(df[df$cluster == cl, ]$order)
+      module = contained_modules,
+      order =  sapply(contained_modules, function(cl) {
+        mean(df[df$module == cl, ]$order)
       })
     )
   }))
-  cluster_centers$n_cl_lbl <- as.factor(sprintf("K = %d", cluster_centers$n_cl))
+  module_centers$n_cl_lbl <- as.factor(sprintf("K = %d", module_centers$n_cl))
 
   avg_silhouette <- data.frame(
-    n_cl = cluster_counts,
-    silhouette = sapply(cluster_counts, function(n_cl) {
+    n_cl = module_counts,
+    silhouette = sapply(module_counts, function(n_cl) {
       df <- silhouette_data[silhouette_data$n_cl == n_cl, ]
       mean(df$silhouette)
     })
@@ -378,12 +379,12 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     ggplot2::ggplot() +
     ggplot2::facet_wrap(n_cl_lbl ~ .) +
     ggplot2::geom_bar(
-      ggplot2::aes(x = .data$order, y = .data$silhouette, fill = .data$cluster),
+      ggplot2::aes(x = .data$order, y = .data$silhouette, fill = .data$module),
       stat = "identity",
     ) +
     ggplot2::geom_text(
-      ggplot2::aes(x = .data$order, y = -0.1, label = .data$cluster),
-      data = cluster_centers,
+      ggplot2::aes(x = .data$order, y = -0.1, label = .data$module),
+      data = module_centers,
     ) +
     ggplot2::geom_hline(
       ggplot2::aes(yintercept = .data$silhouette),
@@ -405,7 +406,8 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
 #' Plot average silhouette scores and average predictive \eqn{R^2}
 #'
 #' @param list_of_fits A list of `scregclust` objects each fit to the same
-#'                     dataset across a variety of cluster counts.
+#'                     dataset across a variety of module counts (varying
+#'                     `n_modules` while running [`scregclust`]).
 #' @param penalization Either a single numeric value requesting the results
 #'                     for the same penalty parameter across all fits in
 #'                     `list_of_fits`, or one for each individual fit.
@@ -416,7 +418,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
 #' @concept plotting
 #'
 #' @export
-plot_cluster_count_helper <- function(list_of_fits, penalization) {
+plot_module_count_helper <- function(list_of_fits, penalization) {
   if (!(
     is.numeric(penalization)
     && (
@@ -445,16 +447,16 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
 
   silhouette_data <- collect_silhouette_data(list_of_fits)
 
-  avg_r2_cluster_data <- do.call(rbind, lapply(list_of_fits, function(fit) {
+  avg_r2_module_data <- do.call(rbind, lapply(list_of_fits, function(fit) {
     do.call(rbind, lapply(seq_along(fit$results), function(i) {
       r <- fit$results[[i]]
-      r2_cluster <- do.call(c, lapply(seq_along(r$output), function(j) {
-        r$output[[j]]$r2_cluster
+      r2_module <- do.call(c, lapply(seq_along(r$output), function(j) {
+        r$output[[j]]$r2_module
       })) # average across different configurations
 
-      # If a cluster is empty then r2_cluster is NA, so use NA remove
-      value <- mean(r2_cluster, na.rm = TRUE)
-      # If all clusters turn out to be empty (e.g. too high penalization) then
+      # If a module is empty then r2_module is NA, so use NA remove
+      value <- mean(r2_module, na.rm = TRUE)
+      # If all modules turn out to be empty (e.g. too high penalization) then
       # mean(...) above will evaluate to NaN. Do not return a data.frame
       # in that case.
       if (is.nan(value)) {
@@ -465,52 +467,52 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
         n_cl = r$n_cl,
         penalization = r$penalization,
         value = value,
-        variable = "avg-r2-cluster"
+        variable = "avg-r2-module"
       )
     }))
   }))
 
-  cluster_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
+  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
 
   if (length(penalization) == 1) {
     silhouette_data <- silhouette_data[
       silhouette_data$penalization == penalization,
     ]
-    avg_r2_cluster_data <- avg_r2_cluster_data[
-      avg_r2_cluster_data$penalization == penalization,
+    avg_r2_module_data <- avg_r2_module_data[
+      avg_r2_module_data$penalization == penalization,
     ]
   } else {
     silhouette_data <- do.call(rbind, lapply(
-      seq_along(cluster_counts),
+      seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == cluster_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
         df[df$penalization == penalization[i]]
       }
     ))
-    avg_r2_cluster_data <- do.call(rbind, lapply(
-      seq_along(cluster_counts),
+    avg_r2_module_data <- do.call(rbind, lapply(
+      seq_along(module_counts),
       function(i) {
-        df <- avg_r2_cluster_data[
-          avg_r2_cluster_data$n_cl == cluster_counts[i],
+        df <- avg_r2_module_data[
+          avg_r2_module_data$n_cl == module_counts[i],
         ]
         df[df$penalization == penalization[i]]
       }
     ))
   }
 
-  avg_silhouette <- sapply(seq_along(cluster_counts), function(i) {
-    df <- silhouette_data[silhouette_data$n_cl == cluster_counts[i], ]
+  avg_silhouette <- sapply(seq_along(module_counts), function(i) {
+    df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
     mean(df$silhouette) # average across different configurations
   })
 
   rbind(
     data.frame(
-      n_cl = cluster_counts,
+      n_cl = module_counts,
       penalization = penalization,
       value = avg_silhouette,
       variable = "avg-silhouette"
     ),
-    avg_r2_cluster_data
+    avg_r2_module_data
   ) |>
     ggplot2::ggplot() +
     ggplot2::facet_wrap(
@@ -535,7 +537,7 @@ plot_cluster_count_helper <- function(list_of_fits, penalization) {
       ggplot2::aes(.data$n_cl, .data$value), size = 0.5
     ) +
     ggplot2::labs(x = "# of modules (K)", y = NULL) +
-    ggplot2::scale_x_continuous(breaks = cluster_counts) +
+    ggplot2::scale_x_continuous(breaks = module_counts) +
     ggplot2::theme_minimal() +
     ggplot2::theme(
       panel.grid = ggplot2::element_blank(),

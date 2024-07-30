@@ -11,9 +11,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// allocate_clusters
-Rcpp::IntegerVector allocate_clusters(SEXP resid_array, Eigen::Map<Eigen::MatrixXd> resid_var, Rcpp::List prior_indicator, Rcpp::IntegerVector k_, Rcpp::IntegerVector update_order, double prior_baseline, double prior_weight);
-RcppExport SEXP _scregclust_allocate_clusters(SEXP resid_arraySEXP, SEXP resid_varSEXP, SEXP prior_indicatorSEXP, SEXP k_SEXP, SEXP update_orderSEXP, SEXP prior_baselineSEXP, SEXP prior_weightSEXP) {
+// allocate_into_modules
+Rcpp::IntegerVector allocate_into_modules(SEXP resid_array, Eigen::Map<Eigen::MatrixXd> resid_var, Rcpp::List prior_indicator, Rcpp::IntegerVector k_, Rcpp::IntegerVector update_order, double prior_baseline, double prior_weight);
+RcppExport SEXP _scregclust_allocate_into_modules(SEXP resid_arraySEXP, SEXP resid_varSEXP, SEXP prior_indicatorSEXP, SEXP k_SEXP, SEXP update_orderSEXP, SEXP prior_baselineSEXP, SEXP prior_weightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,7 +24,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type update_order(update_orderSEXP);
     Rcpp::traits::input_parameter< double >::type prior_baseline(prior_baselineSEXP);
     Rcpp::traits::input_parameter< double >::type prior_weight(prior_weightSEXP);
-    rcpp_result_gen = Rcpp::wrap(allocate_clusters(resid_array, resid_var, prior_indicator, k_, update_order, prior_baseline, prior_weight));
+    rcpp_result_gen = Rcpp::wrap(allocate_into_modules(resid_array, resid_var, prior_indicator, k_, update_order, prior_baseline, prior_weight));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -102,7 +102,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_scregclust_allocate_clusters", (DL_FUNC) &_scregclust_allocate_clusters, 7},
+    {"_scregclust_allocate_into_modules", (DL_FUNC) &_scregclust_allocate_into_modules, 7},
     {"_scregclust_jaccard_indicator_comp", (DL_FUNC) &_scregclust_jaccard_indicator_comp, 2},
     {"_scregclust_coop_lasso", (DL_FUNC) &_scregclust_coop_lasso, 13},
     {"_scregclust_coef_nnls", (DL_FUNC) &_scregclust_coef_nnls, 4},

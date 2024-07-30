@@ -7,7 +7,7 @@
 get_rand_indices(fit, groundtruth, adjusted = TRUE)
 }
 \arguments{
-\item{fit}{An object of class \code{scregClust}}
+\item{fit}{An object of class \code{scregclust}}
 
 \item{groundtruth}{A known clustering of the target genes (integer vector)}
 
@@ -22,7 +22,7 @@ parameter. Returned are the mean, standard deviation and number
 of final configurations that were averaged.
 }
 \description{
-Compute Rand indices for fitted scRegClust object
+Compute Rand indices for fitted scregclust object
 }
 \references{
 W. M. Rand (1971). "Objective criteria for the evaluation of clustering

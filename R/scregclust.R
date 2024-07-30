@@ -7,22 +7,23 @@
 #'                   data with `p` rows of genes and `n` columns of cells.
 #' @param genesymbols A vector of gene names corresponding to rows of
 #'                    `expression`. Has to be of length `p`.
-#' @param is_regulator An indicator vector, telling which rows in `expression`
-#'                     are candidate regulators. Has to be of length `p`.
-#' @param penalization Sparsity penalty controlling the amount of regulators
-#'                     used for each cluster. Either a single positive number
-#'                     or a vector of positive numbers.
-#' @param n_cl Requested number of clusters (integer).
-#'             If this is provided without specifying `target_cluster_start`,
-#'             then an initial clustering is performed on the cross-correlation
-#'             matrix of targets and genes on the first dataset after
-#'             data splitting.
-#' @param target_cluster_start The start cluster assignment for the rows in
-#'                `expression` that correspond to target genes, i.e. those for
-#'                which `is_regulator == 0L`. If this is not specified, then
-#'                see `n_cl` regarding cluster initialization.
-#'                If this is provided then `use_kmeanspp_init` and
-#'                `n_init_clusterings` are ignored.
+#' @param is_regulator An indicator vector where `1` indicates that the
+#'                     corresponding row in `expression` is a candidate
+#'                     regulator. All other rows represent target genes.
+#'                     Has to be of length `p`.
+#' @param penalization Sparsity penalty related to the amount of regulators
+#'                     associated with each module. Either a single positive
+#'                     number or a vector of positive numbers.
+#' @param n_modules Requested number of modules (integer).
+#'             If this is provided without specifying `initial_target_modules`,
+#'             then an initial module allocation is performed on the
+#'             cross-correlation matrix of targets and genes on the first
+#'             dataset after data splitting.
+#' @param initial_target_modules The initial assignment of target genes to
+#'                 modules of length `sum(is_regulator == 0L)`.
+#'                 If this is not specified, then see `n_modules` regarding
+#'                 module initialization. If provided, `use_kmeanspp_init`
+#'                 and `n_initializations` are ignored.
 #' @param sample_assignment A vector of sample assignment for each cell, can
 #'                          be used to perform the data splitting with
 #'                          stratification. Has to be of length `n`.
@@ -65,22 +66,22 @@
 #' @param prior_weight A number between 0 and 1 indicating the strength of the
 #'                     prior in relation to the data. 0 ignores the prior and
 #'                     makes the algorithm completely data-driven. 1 uses only
-#'                     the prior during cluster allocation.
-#' @param min_cluster_size Minimum required size of target genes in a cluster.
-#'                         Smaller clusters are emptied.
-#' @param allocate_per_obs Whether cluster allocation should be performed for
+#'                     the prior during module allocation.
+#' @param min_module_size Minimum required size of target genes in a module.
+#'                        Smaller modules are emptied.
+#' @param allocate_per_obs Whether module allocation should be performed for
 #'                         each observation in the second data split separately.
-#'                         If `FALSE`, clusters are allocated on the aggregate
-#'                         sum of squares across all observations in the
-#'                         second data split
+#'                         If `FALSE`, target genes are allocated into modules
+#'                         on the aggregate sum of squares across all
+#'                         observations in the second data split.
 #' @param noise_threshold Threshold for the best \eqn{R^2} of a target gene
 #'                        before it gets identified as noise.
 #' @param n_cycles Number of maximum algorithmic cycles.
-#' @param use_kmeanspp_init Use kmeans++ for cluster initialization if
-#'                          `target_cluster_start` is a single integer;
+#' @param use_kmeanspp_init Use kmeans++ for module initialization if
+#'                          `initial_target_modules` is a single integer;
 #'                          otherwise use kmeans with random initial cluster
 #'                          centers
-#' @param n_init_clusterings Number of kmeans(++) initialisation runs.
+#' @param n_initializations Number of kmeans(++) initialization runs.
 #' @param max_optim_iter Maximum number of iterations during optimization
 #'                       in the coop-Lasso and NNLS steps.
 #' @param tol_coop_rel Relative convergence tolerance during optimization
@@ -89,7 +90,7 @@
 #'                     in the coop-Lasso step.
 #' @param tol_nnls Convergence tolerance during optimization in the NNLS step.
 #' @param compute_predictive_r2 Whether to compute predictive \eqn{R^2} per
-#'                              cluster and regulator importance
+#'                              module as well as regulator importance.
 #' @param compute_silhouette Whether to compute silhouette scores for each
 #'                           target gene.
 #' @param nowarnings When turned on then no warning messages are shown.
@@ -100,8 +101,8 @@
 #'   \item{results}{A list of result lists (each with S3 class
 #'                  `scregclust_result`), one for each supplied `penalization`
 #'                  parameter. See below.}
-#'   \item{target_cluster_start}{Initial clustering for target genes,
-#'                               i.e. those with `is_regulator == 0`}
+#'   \item{initial_target_modules}{Initial allocation of target genes into
+#'                                 modules.}
 #'   \item{split_indices}{either verbatim the vector given as input or
 #'                        a vector encoding the splits as NA = not included,
 #'                        1 = split 1 or 2 = split 2. Allows reproduciblity
@@ -112,51 +113,52 @@
 #' * the supplied `genesymbols` after filtering (as used during fitting),
 #' * the supplied `is_regulator` vector after filtering (as used during
 #'   fitting),
-#' * the number of fitted clusters `n_cl`,
+#' * the number of fitted modules `n_modules`,
 #' * whether the current run `converged` to a single configuration (as a
 #'   boolean),
 #' * as well as an `output` object containing the numeric results for each
 #'   final configuration.
 #'
-#' It is possible that the algorithm ends in a cycle instead of a unique final
-#' configuration. Therefore, `output` is a list with each element itself being
-#' a list with the following contents:
+#' It is possible that the algorithm ends in a finite cycle of configurations
+#' instead of a unique final configuration.
+#' Therefore, `output` is a list with each element itself being a list
+#' with the following contents:
 #' \describe{
 #'   \item{`reg_table`}{a regulator table, a matrix of weights for each
-#'                      regulator and cluster}
-#'   \item{`cluster`}{the cluster assignments for all genes with regulators
-#'                    marked as `NA`}
-#'   \item{`cluster_all`}{the cluster assignments for all genes with regulators
-#'                        marked as `NA`. Genes that are in the rag-bag cluster
-#'                        (marked with -1 in `cluster`) are assigned to the
-#'                        existing cluster in which it has the largest
-#'                        \eqn{R^2}, even if it is below `noise_threshold`.}
+#'                      regulator and module}
+#'   \item{`module`}{vector of same length as `genesymbols` containing the
+#'                   module assignments for all genes with regulators
+#'                   marked as `NA`. Genes considered noise are marked as `-1`.}
+#'   \item{`module_all`}{same as `module`, however, genes that were marked as
+#'                       noise (-1 in `module`) are assigned to the
+#'                       module in which it has the largest \eqn{R^2},
+#'                       even if it is below `noise_threshold`.}
 #'   \item{`r2`}{matrix of predictive \eqn{R^2} value for each target gene and
-#'              cluster}
+#'              module}
 #'   \item{`best_r2`}{vector of best predictive \eqn{R^2} for each gene
 #'                   (regulators marked with NA)}
-#'   \item{`best_r2_idx`}{cluster index coreesponding to best predictive
+#'   \item{`best_r2_idx`}{module index corresponding to best predictive
 #'                        \eqn{R^2} for each gene (regulators marked with NA)}
-#'   \item{`r2_cluster`}{a vector of predictive \eqn{R^2} values for each
-#'                       cluster (included if `compute_predictive_r2 == TRUE`)}
+#'   \item{`r2_module`}{a vector of predictive \eqn{R^2} values for each
+#'                      module (included if `compute_predictive_r2 == TRUE`)}
 #'   \item{`importance`}{a matrix of importance values for each regulator (rows)
-#'                       and cluster (columns) (included if
+#'                       and module (columns) (included if
 #'                       `compute_predictive_r2 == TRUE`)}
-#'   \item{`r2_cross_cluster_per_target`}{a matrix of cross cluster \eqn{R^2}
+#'   \item{`r2_cross_module_per_target`}{a matrix of cross module \eqn{R^2}
 #'                                        values for each target gene (rows)
-#'                                        and each cluster (columns) (included
+#'                                        and each module (columns) (included
 #'                                        if `compute_silhouette == TRUE`)}
 #'   \item{`silhouette`}{a vector of silhouette scores for each target gene
 #'                       (included if `compute_silhouette == TRUE`)}
-#'   \item{`models`}{regulator selection for each cluster as a matrix with
-#'                   regulators in rows and clusters in columns}
-#'   \item{`signs`}{regulator signs for each cluster as a matrix with
-#'                  regulators in rows and clusters in columns}
-#'   \item{`weights`}{average regulator coefficient for each cluster}
-#'   \item{`coeffs`}{list of regulator coefficient matrices for each cluster
+#'   \item{`models`}{regulator selection for each module as a matrix with
+#'                   regulators in rows and modules in columns}
+#'   \item{`signs`}{regulator signs for each module as a matrix with
+#'                  regulators in rows and modules in columns}
+#'   \item{`weights`}{average regulator coefficient for each module}
+#'   \item{`coeffs`}{list of regulator coefficient matrices for each module
 #'                   for all target genes as re-estimated in the NNLS step}
 #'   \item{`sigmas`}{matrix of residual variances, one per target gene
-#'                   in each cluster; derived from the residuals in NNLS step}
+#'                   in each module; derived from the residuals in NNLS step}
 #' }
 #'
 #' @concept main
@@ -166,8 +168,8 @@ scregclust <- function(expression,
                        genesymbols,
                        is_regulator,
                        penalization,
-                       n_cl,
-                       target_cluster_start = NULL,
+                       n_modules,
+                       initial_target_modules = NULL,
                        sample_assignment = NULL,
                        center = TRUE,
                        split1_proportion = 0.5,
@@ -177,12 +179,12 @@ scregclust <- function(expression,
                        prior_genesymbols = NULL,
                        prior_baseline = 1e-6,
                        prior_weight = 0.5,
-                       min_cluster_size = 0L,
+                       min_module_size = 0L,
                        allocate_per_obs = TRUE,
                        noise_threshold = 0.025,
                        n_cycles = 50L,
                        use_kmeanspp_init = TRUE,
-                       n_init_clusterings = 50L,
+                       n_initializations = 50L,
                        max_optim_iter = 10000L,
                        tol_coop_rel = 1e-8,
                        tol_coop_abs = 1e-12,
@@ -288,49 +290,49 @@ scregclust <- function(expression,
   }
 
   if (!(
-    is.numeric(n_cl)
-    && length(n_cl) == 1L
-    && as.integer(n_cl) == n_cl
-    && n_cl >= 1
-    && n_cl <= sum(is_regulator == 0)
+    is.numeric(n_modules)
+    && length(n_modules) == 1L
+    && as.integer(n_modules) == n_modules
+    && n_modules >= 1
+    && n_modules <= sum(is_regulator == 0)
   )) {
     if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
     cli::cli_abort(c(
-      "{.var n_cl} is not supplied correctly.",
+      "{.var n_modules} is not supplied correctly.",
       "x" = paste(
         "An integer between 1 and the number of target genes",
-        "({sum(is_regulator == 0)}) specifying the number of clusters."
+        "({sum(is_regulator == 0)}) specifying the maximum number of modules."
       )
     ))
   }
 
-  if (!is.null(target_cluster_start)) {
+  if (!is.null(initial_target_modules)) {
     if (!(
-      is.numeric(target_cluster_start)
-      && all(as.integer(target_cluster_start) == target_cluster_start)
-      && length(target_cluster_start) == sum(is_regulator == 0)
-      && all(target_cluster_start >= 1)
-      && all(target_cluster_start <= n_cl)
+      is.numeric(initial_target_modules)
+      && all(as.integer(initial_target_modules) == initial_target_modules)
+      && length(initial_target_modules) == sum(is_regulator == 0)
+      && all(initial_target_modules >= 1)
+      && all(initial_target_modules <= n_modules)
     )) {
       if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
       cli::cli_abort(c(
-        "{.var target_cluster_start} is not supplied correctly.",
+        "{.var initial_target_modules} is not supplied correctly.",
         "x" = paste(
-          "A vector of initial cluster indices for the target genes of",
+          "A vector of initial module indices for the target genes of",
           "length {sum(is_regulator == 0)}."
         ),
         "x" = paste(
-          "Entries need to be between 1 and {.var n_cl} = {n_cl}."
+          "Entries need to be between 1 and {.var n_modules} = {n_modules}."
         )
       ))
     } else {
-      target_cluster_start <- as.integer(target_cluster_start)
+      initial_target_modules <- as.integer(initial_target_modules)
     }
   }
 
@@ -602,19 +604,19 @@ scregclust <- function(expression,
   }
 
   if (!(
-    length(min_cluster_size) == 1
-    && as.integer(min_cluster_size) == min_cluster_size
-    && min_cluster_size >= 0
+    length(min_module_size) == 1
+    && as.integer(min_module_size) == min_module_size
+    && min_module_size >= 0
   )) {
     if (verbose && cl) {
       cat("\n")
       cl <- FALSE
     }
     cli::cli_abort(
-      "{.var min_cluster_size} needs to be a non-negative integer."
+      "{.var min_module_size} needs to be a non-negative integer."
     )
   } else {
-    min_cluster_size <- as.integer(min_cluster_size)
+    min_module_size <- as.integer(min_module_size)
   }
 
   if (!(
@@ -664,7 +666,7 @@ scregclust <- function(expression,
     n_cycles <- as.integer(n_cycles)
   }
 
-  if (is.null(target_cluster_start)) {
+  if (is.null(initial_target_modules)) {
     if (!(
       is.logical(use_kmeanspp_init)
       && length(use_kmeanspp_init) == 1
@@ -681,19 +683,19 @@ scregclust <- function(expression,
     }
 
     if (!(
-      length(n_init_clusterings) == 1
-      && as.integer(n_init_clusterings) == n_init_clusterings
-      && n_init_clusterings > 0
+      length(n_initializations) == 1
+      && as.integer(n_initializations) == n_initializations
+      && n_initializations > 0
     )) {
       if (verbose && cl) {
         cat("\n")
         cl <- FALSE
       }
       cli::cli_abort(
-        "{.var n_init_clusterings} needs to be a positive integer."
+        "{.var n_initializations} needs to be a positive integer."
       )
     } else {
-      n_init_clusterings <- as.integer(n_init_clusterings)
+      n_initializations <- as.integer(n_initializations)
     }
   }
 
@@ -916,8 +918,8 @@ scregclust <- function(expression,
     z1_target <- z1_target[, !gs_constant_target, drop = FALSE]
     z2_target <- z2_target[, !gs_constant_target, drop = FALSE]
 
-    if (!is.null(target_cluster_start)) {
-      target_cluster_start <- target_cluster_start[!gs_constant_target]
+    if (!is.null(initial_target_modules)) {
+      initial_target_modules <- initial_target_modules[!gs_constant_target]
     }
 
     if (verbose) {
@@ -1085,27 +1087,27 @@ scregclust <- function(expression,
   cross_corr1 <- fast_cor(z1_target_scaled, z1_reg_scaled)
   # cross_corr2 <- fast_cor(z2_target_scaled, z2_reg_scaled)
 
-  # Initial cluster allocation
-  if (is.null(target_cluster_start)) {
-    # Find tentative clusters with k-means (use k-means++ to choose
+  # Initial module allocation
+  if (is.null(initial_target_modules)) {
+    # Find tentative modules with k-means (use k-means++ to choose
     # good initial clusterings)
     if (use_kmeanspp_init) {
       k_start_cl <- kmeanspp(
         cross_corr1,
-        n_cluster = n_cl,
-        n_init_clusterings = n_init_clusterings,
+        n_cluster = n_modules,
+        n_init_clusterings = n_initializations,
         n_max_iter = 100L
       )
     } else {
       k_start_cl <- stats::kmeans(
         cross_corr1,
-        n_cl,
+        n_modules,
         iter.max = 100L,
-        nstart = n_init_clusterings
+        nstart = n_initializations
       )$cluster
     }
   } else {
-    k_start_cl <- target_cluster_start
+    k_start_cl <- initial_target_modules
   }
 
   if (verbose) {
@@ -1136,9 +1138,9 @@ scregclust <- function(expression,
 
   if (allocate_per_obs) {
     # Pre-allocate large SSQ array to speed up computations below
-    sq_residuals_test <- alloc_array(z2_target_scaled^2, n_cl)
+    sq_residuals_test <- alloc_array(z2_target_scaled^2, n_modules)
     attr(sq_residuals_test, "dim") <- c(
-      n_cl, n2, n_target
+      n_modules, n2, n_target
     )
   } else {
     sq_residuals_test <- NULL
@@ -1167,7 +1169,7 @@ scregclust <- function(expression,
     )
 
     target_counts <- c(
-      NA_integer_, sapply(seq_len(n_cl), function(s) sum(k_start_cl == s))
+      NA_integer_, sapply(seq_len(n_modules), function(s) sum(k_start_cl == s))
     )
     cat("\n")
     cat(count_table(
@@ -1200,7 +1202,7 @@ scregclust <- function(expression,
 
     k <- k_start_cl
 
-    # Cluster history to determine convergence
+    # Module history to determine convergence
     n_k <- 2
     k_history <- list()
     k_history[[1]] <- k
@@ -1245,7 +1247,7 @@ scregclust <- function(expression,
           cli::cli_text(
             cli::symbol$pointer,
             cli::col_blue(" {.strong Last cycle}"),
-            " No cluster allocation"
+            " No module allocation"
           )
         } else {
           cli::cli_text(
@@ -1266,12 +1268,12 @@ scregclust <- function(expression,
         # the final cycle configurations.
         k <- k_history[[length(k_history) - m + 1L]]
 
-        models <- matrix(FALSE, nrow = n_reg, ncol = n_cl)
-        weights <- matrix(0, nrow = n_reg, ncol = n_cl)
-        signs <- matrix(NA_real_, nrow = n_reg, ncol = n_cl)
+        models <- matrix(FALSE, nrow = n_reg, ncol = n_modules)
+        weights <- matrix(0, nrow = n_reg, ncol = n_modules)
+        signs <- matrix(NA_real_, nrow = n_reg, ncol = n_modules)
 
         if (last_cycle) {
-          coeffs_final[[m]] <- vector("list", n_cl)
+          coeffs_final[[m]] <- vector("list", n_modules)
         }
 
         if (verbose) {
@@ -1285,18 +1287,18 @@ scregclust <- function(expression,
           sb <- cli::cli_status(msg)
         }
 
-        for (j in seq_len(n_cl)) {
+        for (j in seq_len(n_modules)) {
           if (verbose) {
-            cluster_progstr <- progstr(j, n_cl, "clusters")
+            module_progstr <- progstr(j, n_modules, "modules")
             cli::cli_status_update(
               id = sb,
-              paste(msg, cluster_progstr)
+              paste(msg, module_progstr)
             )
           }
 
           z1_target_scaled_cl <- z1_target_scaled[, k == j, drop = FALSE]
 
-          n_target_cl <- ncol(z1_target_scaled_cl) # number of cluster genes
+          n_target_cl <- ncol(z1_target_scaled_cl) # number of genes in module
 
           if (n_target_cl > 0) {
             # Compute weights based on OLS residual standard deviation
@@ -1363,7 +1365,7 @@ scregclust <- function(expression,
           ))
           if (last_cycle) {
             target_counts <- sapply(
-              c(-1, seq_len(n_cl)), function(s) sum(k == s)
+              c(-1, seq_len(n_modules)), function(s) sum(k == s)
             )
             reg_counts <- c(NA_integer_, colSums(models))
             tbl_title <- if (final_cycle_length > 1) {
@@ -1389,15 +1391,15 @@ scregclust <- function(expression,
         # is constant zero, since there is no intercept. The sum-of-squares
         # for each gene is then just the squared response.
         sum_squares_train <- matrix(
-          rep.int(colSums(z1_target_scaled^2), n_cl),
+          rep.int(colSums(z1_target_scaled^2), n_modules),
           nrow = n_target,
-          ncol = n_cl
+          ncol = n_modules
         )
 
         sum_squares_test <- matrix(
-          rep.int(colSums(z2_target_scaled^2), n_cl),
+          rep.int(colSums(z2_target_scaled^2), n_modules),
           nrow = n_target,
-          ncol = n_cl
+          ncol = n_modules
         )
 
         if (allocate_per_obs && !last_cycle) {
@@ -1413,26 +1415,26 @@ scregclust <- function(expression,
           ))
         }
 
-        for (j in seq_len(n_cl)) {
+        for (j in seq_len(n_modules)) {
           if (verbose) {
-            cluster_progstr <- progstr(j, n_cl, "clusters")
+            module_progstr <- progstr(j, n_modules, "modules")
             cli::cli_status_update(
               id = sb,
               paste(
                 "{cli::symbol$arrow_right} {.strong Step 2a:}",
                 "Re-estimate coefficients",
-                cluster_progstr
+                module_progstr
               )
             )
           }
 
-          # Get regulators used in cluster/model j
+          # Get regulators used in model for module j
           reg_cl <- which(models[, j] == TRUE)
           if (length(reg_cl) > 0L) {
             if (length(reg_cl) > n1 && !nowarnings) {
               cli::cli_inform(c(
                 paste(
-                  "More selected regulators in cluster {j} than cells.",
+                  "More selected regulators in module {j} than cells.",
                   "Results may be instable."
                 ),
                 "i" = paste(
@@ -1530,13 +1532,13 @@ scregclust <- function(expression,
         start_time <- Sys.time()
         sb <- cli::cli_status(paste(
           "{cli::symbol$arrow_right} {.strong Step 2b:}",
-          "Allocating clusters"
+          "Allocating modules"
         ))
       }
 
       if (allocate_per_obs) {
         update_order <- sample(length(k), length(k)) - 1L
-        idx_new <- allocate_clusters(
+        idx_new <- allocate_into_modules(
           sq_residuals_test,
           resid_var,
           prior_indicator_list,
@@ -1548,10 +1550,10 @@ scregclust <- function(expression,
 
         idx <- idx_new
       } else {
-        # We could choose clusters on overall result instead of
+        # We could choose modules on aggregated results instead of
         # per observation vote
         idx <- k
-        cluster_totals <- sapply(seq_len(n_cl), function(i) sum(idx == i))
+        module_totals <- sapply(seq_len(n_modules), function(i) sum(idx == i))
 
         # Model log-likelihood
         model_log_likelihood <- (
@@ -1559,7 +1561,7 @@ scregclust <- function(expression,
           + sum_squares_test / resid_var
         )
 
-        # Convert to probabilities across clusters
+        # Convert to probabilities across modules
         max_model_log_likelihood <- apply(model_log_likelihood, 1, max)
         model_log_likelihood_m_max <- (
           model_log_likelihood - max_model_log_likelihood
@@ -1570,22 +1572,22 @@ scregclust <- function(expression,
         )
 
         # Update one gene at a time to ensure correctness of the prior
-        # After changing cluster assignment of a single gene, the prior needs
+        # After changing module assignment of a single gene, the prior needs
         # to be recalculated, which is what we are doing here.
         update_order <- sample(length(idx), length(idx))
         for (gene in update_order) {
-          prior_overlap_clusters <- sapply(
+          prior_overlap_modules <- sapply(
             # indices are 0-based for C++ code
             prior_indicator_list[[gene]] + 1,
             function(i) idx[i]
           )
           prior_frac <- sapply(
-            seq_len(n_cl),
-            function(i) sum(prior_overlap_clusters == i)
+            seq_len(n_modules),
+            function(i) sum(prior_overlap_modules == i)
           )
 
-          prior_frac[cluster_totals > 0] <- (
-            prior_frac[cluster_totals > 0] / cluster_totals[cluster_totals > 0]
+          prior_frac[module_totals > 0] <- (
+            prior_frac[module_totals > 0] / module_totals[module_totals > 0]
           )
           prior_frac <- prior_frac + prior_baseline
           prior_log_prob <- log(prior_frac) - log(sum(prior_frac))
@@ -1599,14 +1601,14 @@ scregclust <- function(expression,
         }
       }
 
-      # Put all genes hard to predict in cluster -1
+      # Put all genes hard to predict in noise module, marked by -1
       idx[which(best_r2[[cycle]] < noise_threshold)] <- -1L
 
-      # Enforce minimum cluster size by emptying small clusters
-      # Observations in those clusters get assigned to the noise cluster
-      # but can be re-assigned in the next cycle
-      cluster_size <- sapply(seq_len(n_cl), function(i) sum(idx == i))
-      idx[idx %in% which(cluster_size < min_cluster_size)] <- -1
+      # Enforce minimum module size by emptying small modules.
+      # Observations in those modules get assigned to the noise module
+      # but can be re-assigned in the next cycle.
+      module_size <- sapply(seq_len(n_modules), function(i) sum(idx == i))
+      idx[idx %in% which(module_size < min_module_size)] <- -1
 
       k <- as.integer(idx)
 
@@ -1614,13 +1616,13 @@ scregclust <- function(expression,
         end_time <- Sys.time()
         cli::cli_status_clear(id = sb)
         cli::cli_alert_success(paste(
-          "{.strong Step 2b:} Clusters allocated",
+          "{.strong Step 2b:} Modules allocated",
           cli::col_blue(
             "(in ", prettyunits::pretty_dt(end_time - start_time), ")"
           )
         ))
 
-        target_counts <- sapply(c(-1, seq_len(n_cl)), function(s) sum(k == s))
+        target_counts <- sapply(c(-1, seq_len(n_modules)), function(s) sum(k == s))
         reg_counts <- c(NA_integer_, colSums(models))
 
         cat(count_table(
@@ -1679,31 +1681,31 @@ scregclust <- function(expression,
       )
     }
 
-    cluster <- vector("list", final_cycle_length)
-    cluster_all <- vector("list", final_cycle_length)
+    module <- vector("list", final_cycle_length)
+    module_all <- vector("list", final_cycle_length)
     r2 <- vector("list", final_cycle_length)
     r2_idx <- vector("list", final_cycle_length)
     reg_table <- vector("list", final_cycle_length)
     r2_removed <- vector("list", final_cycle_length)
-    r2_cluster <- vector("list", final_cycle_length)
+    r2_module <- vector("list", final_cycle_length)
     importance <- vector("list", final_cycle_length)
-    r2_cross_cluster_per_target <- vector("list", final_cycle_length)
+    r2_cross_module_per_target <- vector("list", final_cycle_length)
     silhouette <- vector("list", final_cycle_length)
 
     for (m in seq_len(final_cycle_length)) {
       k <- k_history[[length(k_history) - m + 1L]]
 
       if (compute_predictive_r2) {
-        r2_removed[[m]] <- vector("list", n_cl)
-        r2_cluster[[m]] <- rep(NA_real_, n_cl)
+        r2_removed[[m]] <- vector("list", n_modules)
+        r2_module[[m]] <- rep(NA_real_, n_modules)
         importance[[m]] <- matrix(
-          NA_real_, nrow = sum(is_regulator), ncol = n_cl
+          NA_real_, nrow = sum(is_regulator), ncol = n_modules
         )
 
-        for (j in seq_len(n_cl)) {
-          # Get regulators used in cluster j
+        for (j in seq_len(n_modules)) {
+          # Get regulators used in module j
           reg_cl <- which(models_final[[m]][, j] == TRUE)
-          # Get genes in cluster j
+          # Get genes in module j
           target_cl <- which(k == j)
 
           if (length(target_cl) > 0L && length(reg_cl) > 0L) {
@@ -1766,14 +1768,14 @@ scregclust <- function(expression,
             colnames(r2_removed[[m]][[j]]) <- c("None", genesymbols_reg[reg_cl])
             rownames(r2_removed[[m]][[j]]) <- genesymbols_target[target_cl]
 
-            # Save cluster specific R2
-            r2_cluster[[m]][j] <- r2_removed_vec[1]
+            # Save module specific R2
+            r2_module[[m]][j] <- r2_removed_vec[1]
 
             # Compute importances
             importance[[m]][reg_cl, j] <- (
               1 - (
                 r2_removed_vec[2L:(length(reg_cl) + 1L)]
-                / r2_cluster[[m]][j]
+                / r2_module[[m]][j]
               )
             )
           }
@@ -1781,15 +1783,15 @@ scregclust <- function(expression,
       }
 
       if (compute_silhouette) {
-        # Compute cross-cluster R2
+        # Compute cross-module R2
         sum_squares_test <- matrix(
-          rep.int(colSums(z2_target_scaled^2), n_cl),
+          rep.int(colSums(z2_target_scaled^2), n_modules),
           nrow = n_target,
-          ncol = n_cl
+          ncol = n_modules
         )
 
-        for (j in seq_len(n_cl)) {
-          # Get regulators used in cluster/model j
+        for (j in seq_len(n_modules)) {
+          # Get regulators used in model for module j
           reg_cl <- which(models[, j] == TRUE)
           if (length(reg_cl) > 0L) {
             z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
@@ -1824,7 +1826,7 @@ scregclust <- function(expression,
           }
         }
 
-        r2_cross_cluster_per_target[[m]] <- (
+        r2_cross_module_per_target[[m]] <- (
           1 - sum_squares_test / colSums(scale(
             z2_target_scaled,
             center = TRUE,
@@ -1835,11 +1837,11 @@ scregclust <- function(expression,
         silhouette[[m]] <- sapply(seq_along(k), function(i) {
           c <- k[i]
           if (c != -1) {
-            b <- max(r2_cross_cluster_per_target[[m]][i, ][-c])
+            b <- max(r2_cross_module_per_target[[m]][i, ][-c])
             if (b < 0) {
               b <- 0
             }
-            a <- r2_cross_cluster_per_target[[m]][i, c]
+            a <- r2_cross_module_per_target[[m]][i, c]
             (a - b) / max(a, b)
           } else {
             NA
@@ -1847,39 +1849,39 @@ scregclust <- function(expression,
         })
       }
 
-      # # "Hack" to put regulators in tentative cluster
+      # # "Hack" to put regulators in tentative module
       # k_ <- k
-      # k_[k == -1L] <- n_cl + 1L
-      # non_empty_clusters <- which(sapply(
-      #   seq_len(n_cl + 1L), function(j) sum(k_ == j) > 0
+      # k_[k == -1L] <- n_modules + 1L
+      # non_empty_modules <- which(sapply(
+      #   seq_len(n_modules + 1L), function(j) sum(k_ == j) > 0
       # ))
-      # cluster_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
+      # module_indicator <- Matrix::sparseMatrix(i = seq_along(k_), j = k_)
 
-      # idx <- non_empty_clusters[apply(
+      # idx <- non_empty_modules[apply(
       #   diag(
-      #     1 / Matrix::colSums(cluster_indicator)[non_empty_clusters],
-      #     nrow = length(non_empty_clusters)
+      #     1 / Matrix::colSums(module_indicator)[non_empty_modules],
+      #     nrow = length(non_empty_modules)
       #   )
-      #   %*% t(cluster_indicator[, non_empty_clusters])
+      #   %*% t(module_indicator[, non_empty_modules])
       #   %*% cross_corr2,
       #   2,
       #   which.max
       # )]
-      # idx[idx == n_cl + 1L] <- -1L
+      # idx[idx == n_modules + 1L] <- -1L
 
-      cluster[[m]] <- rep.int(
+      module[[m]] <- rep.int(
         NA_integer_, n_reg + n_target
       )
-      # cluster[[m]][is_regulator == 1L] <- idx
-      cluster[[m]][is_regulator == 0L] <- k
+      # module[[m]][is_regulator == 1L] <- idx
+      module[[m]][is_regulator == 0L] <- k
 
-      # Put rag bag genes into closest cluster dependent on R2 value
-      # Leave all other genes in their allocated clusters
-      cluster_all[[m]] <- rep.int(
+      # Put rag bag genes into closest module dependent on R2 value.
+      # Leave all other genes in their allocated modules.
+      module_all[[m]] <- rep.int(
         NA_integer_, n_reg + n_target
       )
-      cluster_all[[m]][is_regulator == 0L] <- k
-      cluster_all[[m]][is_regulator == 0L][k == -1L] <- (
+      module_all[[m]][is_regulator == 0L] <- k
+      module_all[[m]][is_regulator == 0L][k == -1L] <- (
         best_r2_idx_final[[m]][k == -1L]
       )
 
@@ -1891,16 +1893,16 @@ scregclust <- function(expression,
       )
       r2_idx[[m]][is_regulator == 0] <- best_r2_idx_final[[m]]
 
-      max_corr <- matrix(0, nrow = ncol(cross_corr1), ncol = n_cl)
-      for (i in seq_len(n_cl)) {
+      max_corr <- matrix(0, nrow = ncol(cross_corr1), ncol = n_modules)
+      for (i in seq_len(n_modules)) {
         max_corr[, i] <- apply(
           cross_corr1[k == i, , drop = FALSE], 2, stats::median
         )
       }
 
-      tag <- vector(mode = "character", n_cl)
-      for (i in seq_len(n_cl)) {
-        tag[i] <- paste0("cluster ", i)
+      tag <- vector(mode = "character", n_modules)
+      for (i in seq_len(n_modules)) {
+        tag[i] <- paste0("module ", i)
       }
 
       reg_table[[m]] <- as.data.frame(
@@ -1932,19 +1934,19 @@ scregclust <- function(expression,
       penalization = penalization[l],
       genesymbols = genesymbols,
       is_regulator = is_regulator,
-      n_cl = n_cl,
+      n_modules = n_modules,
       converged = converged,
       output = lapply(seq_len(final_cycle_length), function(m) {
         structure(list(
           reg_table = reg_table[[m]],
-          cluster = cluster[[m]],
-          cluster_all = cluster_all[[m]],
-          r2 = r2_final[[m]], # predictive R2 for each target gene and cluster
+          module = module[[m]],
+          module_all = module_all[[m]],
+          r2 = r2_final[[m]], # predictive R2 for each target gene and module
           best_r2 = r2[[m]], # best predictive R2 for each gene
-          best_r2_idx = r2_idx[[m]], # cluster index of best r2
-          r2_cluster = r2_cluster[[m]],
+          best_r2_idx = r2_idx[[m]], # module index of best r2
+          r2_module = r2_module[[m]],
           importance = importance[[m]],
-          r2_cross_cluster_per_target = r2_cross_cluster_per_target[[m]],
+          r2_cross_module_per_target = r2_cross_module_per_target[[m]],
           silhouette = silhouette[[m]],
           models = models_final[[m]],
           signs = signs_final[[m]],
@@ -1969,7 +1971,7 @@ scregclust <- function(expression,
     list(
       penalization = penalization,
       results = results,
-      target_cluster_start = k_start_cl,
+      initial_target_modules = k_start_cl,
       split_indices = split_indices
     ),
     class = "scregclust"
@@ -1989,8 +1991,8 @@ format_scregclust_result <- function(res) {
       function(...) paste0(..., collapse = "\n\n"),
       lapply(seq_along(res$output), function(i) {
         config <- res$output[[i]]
-        target_counts <- sapply(c(-1, seq_len(res$n_cl)), function(s) {
-          sum(config$cluster[!res$is_regulator] == s)
+        target_counts <- sapply(c(-1, seq_len(res$n_modules)), function(s) {
+          sum(config$module[!res$is_regulator] == s)
         })
         reg_counts <- c(NA_integer_, colSums(config$models))
         tbl_title <- if (n_configs > 1) {
@@ -2049,8 +2051,8 @@ format_scregclust <- function(fit) {
   paste0(
     cli::col_grey("# scRegClust fit object"),
     "\n\n",
-    cli::col_grey("# Clusters: "),
-    cli::col_blue(fit$results[[1]]$n_cl),
+    cli::col_grey("# Modules: "),
+    cli::col_blue(fit$results[[1]]$n_modules),
     "\n",
     cli::col_grey("# Penalization parameters:"),
     "\n",

@@ -9,8 +9,8 @@ scregclust(
   genesymbols,
   is_regulator,
   penalization,
-  n_cl,
-  target_cluster_start = NULL,
+  n_modules,
+  initial_target_modules = NULL,
   sample_assignment = NULL,
   center = TRUE,
   split1_proportion = 0.5,
@@ -20,18 +20,19 @@ scregclust(
   prior_genesymbols = NULL,
   prior_baseline = 1e-06,
   prior_weight = 0.5,
-  min_cluster_size = 0L,
+  min_module_size = 0L,
   allocate_per_obs = TRUE,
   noise_threshold = 0.025,
   n_cycles = 50L,
   use_kmeanspp_init = TRUE,
-  n_init_clusterings = 50L,
+  n_initializations = 50L,
   max_optim_iter = 10000L,
   tol_coop_rel = 1e-08,
   tol_coop_abs = 1e-12,
   tol_nnls = 1e-04,
   compute_predictive_r2 = TRUE,
   compute_silhouette = FALSE,
+  nowarnings = FALSE,
   verbose = TRUE
 )
 }
@@ -42,25 +43,26 @@ data with \code{p} rows of genes and \code{n} columns of cells.}
 \item{genesymbols}{A vector of gene names corresponding to rows of
 \code{expression}. Has to be of length \code{p}.}
 
-\item{is_regulator}{An indicator vector, telling which rows in \code{expression}
-are candidate regulators. Has to be of length \code{p}.}
+\item{is_regulator}{An indicator vector where \code{1} indicates that the
+corresponding row in \code{expression} is a candidate
+regulator. All other rows represent target genes.
+Has to be of length \code{p}.}
 
-\item{penalization}{Sparsity penalty controlling the amount of regulators
-used for each cluster. Either a single positive number
-or a vector of positive numbers.}
+\item{penalization}{Sparsity penalty related to the amount of regulators
+associated with each module. Either a single positive
+number or a vector of positive numbers.}
 
-\item{n_cl}{Requested number of clusters (integer).
-If this is provided without specifying \code{target_cluster_start},
-then an initial clustering is performed on the cross-correlation
-matrix of targets and genes on the first dataset after
-data splitting.}
+\item{n_modules}{Requested number of modules (integer).
+If this is provided without specifying \code{initial_target_modules},
+then an initial module allocation is performed on the
+cross-correlation matrix of targets and genes on the first
+dataset after data splitting.}
 
-\item{target_cluster_start}{The start cluster assignment for the rows in
-\code{expression} that correspond to target genes, i.e. those for
-which \code{is_regulator == 0L}. If this is not specified, then
-see \code{n_cl} regarding cluster initialization.
-If this is provided then \code{use_kmeanspp_init} and
-\code{n_init_clusterings} are ignored.}
+\item{initial_target_modules}{The initial assignment of target genes to
+modules of length \code{sum(is_regulator == 0L)}.
+If this is not specified, then see \code{n_modules} regarding
+module initialization. If provided, \code{use_kmeanspp_init}
+and \code{n_initializations} are ignored.}
 
 \item{sample_assignment}{A vector of sample assignment for each cell, can
 be used to perform the data splitting with
@@ -112,28 +114,28 @@ will have.}
 \item{prior_weight}{A number between 0 and 1 indicating the strength of the
 prior in relation to the data. 0 ignores the prior and
 makes the algorithm completely data-driven. 1 uses only
-the prior during cluster allocation.}
+the prior during module allocation.}
 
-\item{min_cluster_size}{Minimum required size of target genes in a cluster.
-Smaller clusters are emptied.}
+\item{min_module_size}{Minimum required size of target genes in a module.
+Smaller modules are emptied.}
 
-\item{allocate_per_obs}{Whether cluster allocation should be performed for
+\item{allocate_per_obs}{Whether module allocation should be performed for
 each observation in the second data split separately.
-If \code{FALSE}, clusters are allocated on the aggregate
-sum of squares across all observations in the
-second data split}
+If \code{FALSE}, target genes are allocated into modules
+on the aggregate sum of squares across all
+observations in the second data split.}
 
 \item{noise_threshold}{Threshold for the best \eqn{R^2} of a target gene
 before it gets identified as noise.}
 
 \item{n_cycles}{Number of maximum algorithmic cycles.}
 
-\item{use_kmeanspp_init}{Use kmeans++ for cluster initialization if
-\code{target_cluster_start} is a single integer;
+\item{use_kmeanspp_init}{Use kmeans++ for module initialization if
+\code{initial_target_modules} is a single integer;
 otherwise use kmeans with random initial cluster
 centers}
 
-\item{n_init_clusterings}{Number of kmeans(++) initialisation runs.}
+\item{n_initializations}{Number of kmeans(++) initialization runs.}
 
 \item{max_optim_iter}{Maximum number of iterations during optimization
 in the coop-Lasso and NNLS steps.}
@@ -147,10 +149,12 @@ in the coop-Lasso step.}
 \item{tol_nnls}{Convergence tolerance during optimization in the NNLS step.}
 
 \item{compute_predictive_r2}{Whether to compute predictive \eqn{R^2} per
-cluster and regulator importance}
+module as well as regulator importance.}
 
 \item{compute_silhouette}{Whether to compute silhouette scores for each
 target gene.}
+
+\item{nowarnings}{When turned on then no warning messages are shown.}
 
 \item{verbose}{Whether to print progress.}
 }
@@ -160,8 +164,8 @@ A list with S3 class \code{scregclust} containing
 \item{results}{A list of result lists (each with S3 class
 \code{scregclust_result}), one for each supplied \code{penalization}
 parameter. See below.}
-\item{target_cluster_start}{Initial clustering for target genes,
-i.e. those with \code{is_regulator == 0}}
+\item{initial_target_modules}{Initial allocation of target genes into
+modules.}
 \item{split_indices}{either verbatim the vector given as input or
 a vector encoding the splits as NA = not included,
 1 = split 1 or 2 = split 2. Allows reproduciblity
@@ -173,52 +177,53 @@ For each supplied penalization parameter, \code{results} contains a list with
 \item the supplied \code{genesymbols} after filtering (as used during fitting),
 \item the supplied \code{is_regulator} vector after filtering (as used during
 fitting),
-\item the number of fitted clusters \code{n_cl},
+\item the number of fitted modules \code{n_modules},
 \item whether the current run \code{converged} to a single configuration (as a
 boolean),
 \item as well as an \code{output} object containing the numeric results for each
 final configuration.
 }
 
-It is possible that the algorithm ends in a cycle instead of a unique final
-configuration. Therefore, \code{output} is a list with each element itself being
-a list with the following contents:
+It is possible that the algorithm ends in a finite cycle of configurations
+instead of a unique final configuration.
+Therefore, \code{output} is a list with each element itself being a list
+with the following contents:
 \describe{
 \item{\code{reg_table}}{a regulator table, a matrix of weights for each
-regulator and cluster}
-\item{\code{cluster}}{the cluster assignments for all genes with regulators
-marked as \code{NA}}
-\item{\code{cluster_all}}{the cluster assignments for all genes with regulators
-marked as \code{NA}. Genes that are in the rag-bag cluster
-(marked with -1 in \code{cluster}) are assigned to the
-existing cluster in which it has the largest
-\eqn{R^2}, even if it is below \code{noise_threshold}.}
+regulator and module}
+\item{\code{module}}{vector of same length as \code{genesymbols} containing the
+module assignments for all genes with regulators
+marked as \code{NA}. Genes considered noise are marked as \code{-1}.}
+\item{\code{module_all}}{same as \code{module}, however, genes that were marked as
+noise (-1 in \code{module}) are assigned to the
+module in which it has the largest \eqn{R^2},
+even if it is below \code{noise_threshold}.}
 \item{\code{r2}}{matrix of predictive \eqn{R^2} value for each target gene and
-cluster}
+module}
 \item{\code{best_r2}}{vector of best predictive \eqn{R^2} for each gene
 (regulators marked with NA)}
-\item{\code{best_r2_idx}}{cluster index coreesponding to best predictive
+\item{\code{best_r2_idx}}{module index corresponding to best predictive
 \eqn{R^2} for each gene (regulators marked with NA)}
-\item{\code{r2_cluster}}{a vector of predictive \eqn{R^2} values for each
-cluster (included if \code{compute_predictive_r2 == TRUE})}
+\item{\code{r2_module}}{a vector of predictive \eqn{R^2} values for each
+module (included if \code{compute_predictive_r2 == TRUE})}
 \item{\code{importance}}{a matrix of importance values for each regulator (rows)
-and cluster (columns) (included if
+and module (columns) (included if
 \code{compute_predictive_r2 == TRUE})}
-\item{\code{r2_cross_cluster_per_target}}{a matrix of cross cluster \eqn{R^2}
+\item{\code{r2_cross_module_per_target}}{a matrix of cross module \eqn{R^2}
 values for each target gene (rows)
-and each cluster (columns) (included
+and each module (columns) (included
 if \code{compute_silhouette == TRUE})}
 \item{\code{silhouette}}{a vector of silhouette scores for each target gene
 (included if \code{compute_silhouette == TRUE})}
-\item{\code{models}}{regulator selection for each cluster as a matrix with
-regulators in rows and clusters in columns}
-\item{\code{signs}}{regulator signs for each cluster as a matrix with
-regulators in rows and clusters in columns}
-\item{\code{weights}}{average regulator coefficient for each cluster}
-\item{\code{coeffs}}{list of regulator coefficient matrices for each cluster
+\item{\code{models}}{regulator selection for each module as a matrix with
+regulators in rows and modules in columns}
+\item{\code{signs}}{regulator signs for each module as a matrix with
+regulators in rows and modules in columns}
+\item{\code{weights}}{average regulator coefficient for each module}
+\item{\code{coeffs}}{list of regulator coefficient matrices for each module
 for all target genes as re-estimated in the NNLS step}
 \item{\code{sigmas}}{matrix of residual variances, one per target gene
-in each cluster; derived from the residuals in NNLS step}
+in each module; derived from the residuals in NNLS step}
 }
 }
 \description{

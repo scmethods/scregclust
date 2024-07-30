@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{cluster_overlap}
 \alias{cluster_overlap}
-\title{Create a table of cluster overlap for two clusterings}
+\title{Create a table of module overlap for two clusterings}
 \usage{
 cluster_overlap(k1, k2)
 }
@@ -12,11 +12,11 @@ cluster_overlap(k1, k2)
 \item{k2}{Second clustering}
 }
 \value{
-A matrix showing the cluster overlap with the labels of \code{k1} in
+A matrix showing the module overlap with the labels of \code{k1} in
 the columns and the labels of \code{k2} in the rows.
 }
 \description{
 Compares two clusterings and creates a table of overlap between them.
-Cluster labels do not have to match.
+Module labels do not have to match.
 }
 \concept{helpers}

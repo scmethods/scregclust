@@ -93,7 +93,6 @@ progstr <- function(step, n_steps, name,
 #'
 #' @param counts a list of count vectors with `1 + n_cl` entries each.
 #'               `NA` values are replaced with `-`
-#' @param n_cl number of clusters
 #' @param title title above the table
 #' @param row_names a vector of row names, one for each count vector
 #' @param col_width minimum width for columns
@@ -131,7 +130,7 @@ count_table <- function(counts,
   )
 
   # longest row name
-  width_row_nms <- max(sapply(c("Cluster", row_names), nchar))
+  width_row_nms <- max(sapply(c("Module", row_names), nchar))
 
   fmt_strs <- sprintf("%%%ds", cws)
   fmt_row_str <- sprintf("  %%%ds  ", width_row_nms)
@@ -171,7 +170,7 @@ count_table <- function(counts,
       function(elems) {
         paste0(paste(
           paste0(
-            cli::col_blue(sprintf(fmt_row_str, "Cluster")),
+            cli::col_blue(sprintf(fmt_row_str, "Module")),
             cli::col_grey(
               paste0(
                 sprintf(fmt_strs[elems], nms[elems]),
@@ -250,19 +249,19 @@ jaccard_indicator <- function(x, upper_bnd = 0.8) {
     }
   }
 
-    # Run actual computation of Jaccard distances and save those
-    # entries that have distance below the upper_bnd.
-    out <- jaccard_indicator_comp(
-      jsplit,
-      eps = upper_bnd
-    )
+  # Run actual computation of Jaccard distances and save those
+  # entries that have distance below the upper_bnd.
+  out <- jaccard_indicator_comp(
+    jsplit,
+    eps = upper_bnd
+  )
 
-    # Form the indicator matrix
-    methods::as(Matrix::sparseMatrix(
-        c(out$i, out$j),
-        c(out$j, out$i),
-        dims = c(n, n)
-    ) + Matrix::Diagonal(n), "ngCMatrix")
+  # Form the indicator matrix
+  methods::as(Matrix::sparseMatrix(
+      c(out$i, out$j),
+      c(out$j, out$i),
+      dims = c(n, n)
+  ) + Matrix::Diagonal(n), "ngCMatrix")
 }
 
 #' Determine initial centers for the kmeans++ algorithm
@@ -375,20 +374,20 @@ kmeanspp <- function(x, n_cluster, n_init_clusterings = 10L, n_max_iter = 10L) {
   clusterings[[min_idx]]$cluster
 }
 
-#' Determine cluster sizes
+#' Determine module sizes
 #'
-#' @param k Vector of cluster indices
-#' @param n_cl Total number of clusters
+#' @param module Vector of module indices
+#' @param n_modules Total number of modules
 #'
-#' @return A named vector containining the name of the cluster (its index or
-#'         `"Noise"`) and the number of elements in that cluster
+#' @return A named vector containining the name of the module (its index or
+#'         `"Noise"`) and the number of elements in that module
 #'
 #' @concept helpers
 #'
 #' @export
-find_cluster_sizes <- function(k, n_cl) {
-  sapply(c(-1L, seq_len(n_cl)), function(i) {
-    v <- sum(k == i)
+find_module_sizes <- function(module, n_modules) {
+  sapply(c(-1L, seq_len(n_modules)), function(i) {
+    v <- sum(module == i)
     if (i == -1) {
       names(v) <- "Noise"
     } else {
@@ -398,44 +397,44 @@ find_cluster_sizes <- function(k, n_cl) {
   })
 }
 
-#' Remove empty clusters
+#' Remove empty modules
 #'
 #' @details
-#' Only iterates through clusters with positive index, leaving the noise
-#' cluster untouched.
+#' Only iterates through modules with positive index, leaving the noise
+#' module untouched.
 #'
-#' @param k Vector of cluster indices
+#' @param module Vector of module indices
 #'
-#' @return The updated vector of cluster indices with empty clusters removed.
+#' @return The updated vector of module indices with empty modules removed.
 #'
 #' @keywords internal
-update_cluster_indices <- function(k) {
-  k_ <- k
-  if (max(k) > length(unique(k[k > 0]))) {
-    unique_k <- unique(k[k > 0])
-    for (i in seq_len(length(unique_k))) {
-      k_[which(k == unique_k[i])] <- i
+remove_empty_modules <- function(module) {
+  module_ <- module
+  if (max(module) > length(unique(module[module > 0]))) {
+    unique_module <- unique(module[module > 0])
+    for (i in seq_len(length(unique_module))) {
+      module_[which(module == unique_module[i])] <- i
     }
   }
 
-  k_
+  module_
 }
 
-#' Extract target gene clusters for given penalization parameters
+#' Extract target gene modules for given penalization parameters
 #'
 #' @param fit An object of class `scregclust`
 #' @param penalization A numeric vector of penalization parameters.
 #'                     The penalization parameters specificed here must have
 #'                     been used used during fitting of the `fit` object.
 #'
-#' @return A list of lists of final target clusters. One list for each
-#'         parameter in `penalization`. The lists contain the clustering of
+#' @return A list of lists of final target modules. One list for each
+#'         parameter in `penalization`. The lists contain the moduleing of
 #'         target genes for each final configuration.
 #'
 #' @concept utilities
 #'
 #' @export
-get_target_clusters <- function(fit, penalization = NULL) {
+get_target_gene_modules <- function(fit, penalization = NULL) {
   if (!all(penalization %in% fit$penalization)) {
     cli::cli_abort(c(
       "Not all parameter values in {.var penalization} have been fitted.",
@@ -457,21 +456,21 @@ get_target_clusters <- function(fit, penalization = NULL) {
     lapply(
       fit$results[[i]]$output,
       function(o) {
-        o$cluster[!fit$results[[i]]$is_regulator]
+        o$module[!fit$results[[i]]$is_regulator]
       }
     )
   })
 }
 
-#' Create a table of cluster overlap for two clusterings
+#' Create a table of module overlap for two clusterings
 #'
 #' Compares two clusterings and creates a table of overlap between them.
-#' Cluster labels do not have to match.
+#' Module labels do not have to match.
 #'
 #' @param k1 First clustering
 #' @param k2 Second clustering
 #'
-#' @return A matrix showing the cluster overlap with the labels of `k1` in
+#' @return A matrix showing the module overlap with the labels of `k1` in
 #'         the columns and the labels of `k2` in the rows.
 #'
 #' @concept helpers
@@ -558,12 +557,12 @@ get_num_final_configs <- function(fit) {
   sapply(fit$results, function(r) length(r$output))
 }
 
-#' Get the average number of active regulators per cluster
+#' Get the average number of active regulators per module
 #'
 #' @param fit An object of class `scRegClust`
 #'
 #' @return A [`data.frame`] containing the average number of active regulators
-#'         per cluster for each penalization parameter.
+#'         per module for each penalization parameter.
 #'
 #' @concept utilities
 #'
@@ -658,9 +657,9 @@ compute_adjusted_rand_index <- function(k1, k2) {
 
 #' Compute Rand indices
 #'
-#' Compute Rand indices for fitted scRegClust object
+#' Compute Rand indices for fitted scregclust object
 #'
-#' @param fit An object of class `scregClust`
+#' @param fit An object of class `scregclust`
 #' @param groundtruth A known clustering of the target genes (integer vector)
 #' @param adjusted If TRUE, the Adjusted Rand index is computed. Otherwise the
 #'                 ordinary Rand index is computed.
@@ -683,7 +682,7 @@ compute_adjusted_rand_index <- function(k1, k2) {
 #'
 #' @export
 get_rand_indices <- function(fit, groundtruth, adjusted = TRUE) {
-  df <- do.call(rbind, lapply(get_target_clusters(fit), function(cs) {
+  df <- do.call(rbind, lapply(get_target_gene_modules(fit), function(cs) {
     indices <- sapply(cs, function(cl) {
       noise_idx <- which(cl == -1)
       if (length(noise_idx) > 0) {
