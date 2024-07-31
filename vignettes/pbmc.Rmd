@@ -130,12 +130,12 @@ downloaded from [GitHub](https://github.com/sven-nelander/scregclust/raw/main/da
 for convenience.
 
 ```{r run-scregclust}
-set.seed(8374)
-fit <- scregclust(
-  z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.1),
-  n_modules = 10L, n_cycles = 50L, noise_threshold = 0.05
-)
-saveRDS(fit, file = "pbmc_scregclust.rds")
+# set.seed(8374)
+# fit <- scregclust(
+#   z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.05),
+#   n_modules = 10L, n_cycles = 50L, noise_threshold = 0.05
+# )
+# saveRDS(fit, file = "pbmc_scregclust.rds")
 
 url <- paste0(
   "https://github.com/sven-nelander/scregclust/raw/main/datasets/",

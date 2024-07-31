@@ -1032,7 +1032,7 @@ scregclust <- function(expression,
     # L. H. Dicker. Variance estimation in high-dimensional linear models.
     # Biometrika, 101(2):269–284, 2014.
     #
-    # Seem like a good choice but cannot figure out how make them
+    # Seem like a good choice but cannot figure out how to make them
     # always positive. Use ridge regression for now.
 
     # m1 <- sum(z1_reg_scaled^2) / (n1 * n_reg)
@@ -1077,11 +1077,11 @@ scregclust <- function(expression,
     / (n1 - init_df)
   )
 
-  base_ws <- sqrt(sqrt(rowSums((
+  beta_adapt_sq <- (
     beta_init %*% diag(
       1 / z1_target_scaled_res_sds, nrow = n_target, ncol = n_target
     )
-  )^2)))
+  )^2
 
   # Pre-compute cross-correlation matrices
   cross_corr1 <- fast_cor(z1_target_scaled, z1_reg_scaled)
@@ -1301,8 +1301,12 @@ scregclust <- function(expression,
           n_target_cl <- ncol(z1_target_scaled_cl) # number of genes in module
 
           if (n_target_cl > 0) {
-            # Compute weights based on OLS residual standard deviation
-            ws <- rep.int(sqrt(n_target_cl), n_reg) / base_ws
+            # Compute weights based on initial (OLS or ridge) coefficient
+            # estimates and residual standard deviation
+            ws <- (
+              rep.int(sqrt(n_target_cl), n_reg)
+              / sqrt(sqrt(rowSums(beta_adapt_sq[, k == j, drop = FALSE])))
+            )
 
             admm_fit <- coop_lasso(
               (
