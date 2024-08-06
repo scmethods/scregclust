@@ -170,9 +170,8 @@ the first final configuration. More than one may be available.
 sapply(fit$results, function(r) length(r$output))
 ```
 
-In this example, two final configurations were found for the lowest
-penalization and only a single configuration for all other penalization
-parameters.
+In this example, at most two final configurations were found for each
+penalization parameters.
 
 To plot the regulator network of the first configuration for
  `penalization = 0.1` the function `plot_regulator_network` can be used.
