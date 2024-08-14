@@ -18,42 +18,46 @@ plot_regulator_network <- function(output,
                                    edge_scaling = 30,
                                    no_links = 6,
                                    col = c(
-                                    "gray80",
-                                    "#FC7165",
-                                    "#BD828C",
-                                    "#9D8A9F",
-                                    "#7D92B2",
-                                    "#BDA88C",
-                                    "#FCBD65",
-                                    "#F2BB90",
-                                    "#E7B9BA",
-                                    "#BDB69C",
-                                    "#92B27D",
-                                    "#9B8BA5",
-                                    "#9D7DB2",
-                                    "#94A5BF"
-                                  )) {
-  REGtable <- output$reg_table
-  idx <- !is.na(colSums(REGtable))
-  REGtable <- REGtable[, idx]
+                                     "gray80",
+                                     "#FC7165",
+                                     "#BD828C",
+                                     "#9D8A9F",
+                                     "#7D92B2",
+                                     "#BDA88C",
+                                     "#FCBD65",
+                                     "#F2BB90",
+                                     "#E7B9BA",
+                                     "#BDB69C",
+                                     "#92B27D",
+                                     "#9B8BA5",
+                                     "#9D7DB2",
+                                     "#94A5BF"
+                                   )) {
+  reg_table <- output$reg_table
+  idx <- !is.na(colSums(reg_table))
+  reg_table <- reg_table[, idx]
 
   regulators <- c()
-  for (i in seq_len(ncol(REGtable))) {
-    tmp1 <- head(rownames(REGtable[order(REGtable[, i], decreasing = TRUE), ]))
+  for (i in seq_len(ncol(reg_table))) {
+    tmp1 <- head(rownames(
+      reg_table[order(reg_table[, i], decreasing = TRUE), ]
+    ))
     regulators <- append(regulators, tmp1)
-    tmp2 <- tail(rownames(REGtable[order(REGtable[, i], decreasing = TRUE), ]))
+    tmp2 <- tail(rownames(
+      reg_table[order(reg_table[, i], decreasing = TRUE), ]
+    ))
     regulators <- append(regulators, tmp2)
   }
 
   regulators <- unique(regulators)
 
-  f <- which(rownames(REGtable) %in% regulators)
-  REGtable <- REGtable[f, ]
+  f <- which(rownames(reg_table) %in% regulators)
+  reg_table <- reg_table[f, ]
 
-  REGtable$regulator <- rownames(REGtable)
-  rownames(REGtable) <- NULL
+  reg_table$regulator <- rownames(reg_table)
+  rownames(reg_table) <- NULL
 
-  links <- reshape::melt(REGtable, id.vars = "regulator")
+  links <- reshape::melt(reg_table, id.vars = "regulator")
   colnames(links) <- c("from", "to", "weight")
   f <- which(links$weight == 0)
   links <- links[-f, ]
@@ -71,16 +75,16 @@ plot_regulator_network <- function(output,
 
   links <- as.data.frame(links)
 
-  rownames(REGtable) <- REGtable$regulator
-  REGtable <- REGtable[, -ncol(REGtable)]
+  rownames(reg_table) <- reg_table$regulator
+  reg_table <- reg_table[, -ncol(reg_table)]
 
-  nodes <- array(0, dim = c((nrow(REGtable) + ncol(REGtable)), 2))
+  nodes <- array(0, dim = c((nrow(reg_table) + ncol(reg_table)), 2))
   colnames(nodes) <- c("id", "type")
 
-  nodes[seq_len(nrow(REGtable)), 1] <- rownames(REGtable)
-  nodes[seq_len(nrow(REGtable)), 2] <- "Regulator"
-  nodes[(nrow(REGtable) + 1):nrow(nodes), 1] <- colnames(REGtable)
-  nodes[(nrow(REGtable) + 1):nrow(nodes), 2] <- "TargetState"
+  nodes[seq_len(nrow(reg_table)), 1] <- rownames(reg_table)
+  nodes[seq_len(nrow(reg_table)), 2] <- "Regulator"
+  nodes[(nrow(reg_table) + 1):nrow(nodes), 1] <- colnames(reg_table)
+  nodes[(nrow(reg_table) + 1):nrow(nodes), 2] <- "TargetState"
   nodes <- as.data.frame(nodes)
 
   net <- igraph::graph_from_data_frame(
@@ -92,7 +96,7 @@ plot_regulator_network <- function(output,
 
   igraph::V(net)[which(igraph::V(net)$type == "Regulator")]$type <- 1
   igraph::V(net)[which(igraph::V(net)$type == "TargetState")]$type <- (
-    seq_len(ncol(REGtable))
+    seq_len(ncol(reg_table))
   )
 
   colrs <- col
@@ -319,6 +323,21 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
   #   ))
   # }
 
+  if (any(
+    do.call(c, lapply(list_of_fits, function(fit) {
+      do.call(c, lapply(fit$results, function(res) {
+        sapply(res$output, function(o) {
+          is.null(o$silhouette)
+        })
+      }))
+    }))
+  )) {
+    cli::cli_abort(c(
+      "Silhouette scores not to be computed during fitting.",
+      "i" = "Set `compute_silhouette = TRUE` in `scregclust`"
+    ))
+  }
+
   silhouette_data <- collect_silhouette_data(list_of_fits)
   module_counts <- sapply(
     list_of_fits, function(fit) fit$results[[1]]$n_modules
@@ -379,7 +398,9 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
       mean(df$silhouette)
     })
   )
-  avg_silhouette$n_modules_lbl <- as.factor(sprintf("K = %d", avg_silhouette$n_modules))
+  avg_silhouette$n_modules_lbl <- as.factor(
+    sprintf("K = %d", avg_silhouette$n_modules)
+  )
 
   silhouette_data |>
     ggplot2::ggplot() +
@@ -451,6 +472,21 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
     ))
   }
 
+  if (any(
+    do.call(c, lapply(list_of_fits, function(fit) {
+      do.call(c, lapply(fit$results, function(res) {
+        sapply(res$output, function(o) {
+          is.null(o$silhouette)
+        })
+      }))
+    }))
+  )) {
+    cli::cli_abort(c(
+      "Silhouette scores not to be computed during fitting.",
+      "i" = "Set `compute_silhouette = TRUE` in `scregclust`"
+    ))
+  }
+
   silhouette_data <- collect_silhouette_data(list_of_fits)
 
   avg_r2_module_data <- do.call(rbind, lapply(list_of_fits, function(fit) {
@@ -478,7 +514,9 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
     }))
   }))
 
-  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_modules)
+  module_counts <- sapply(
+    list_of_fits, function(fit) fit$results[[1]]$n_modules
+  )
 
   if (length(penalization) == 1) {
     silhouette_data <- silhouette_data[
