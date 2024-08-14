@@ -220,14 +220,14 @@ collect_silhouette_data <- function(list_of_fits) {
         o <- r$output[[j]]
         k <- o$module[!r$is_regulator]
 
-        order_list <- lapply(seq_len(r$n_cl), function(cl) {
+        order_list <- lapply(seq_len(r$n_modules), function(cl) {
           if (sum(k == cl) > 0) {
             order(o$silhouette[k == cl])
           } else {
             integer(0)
           }
         })
-        gene <- do.call(c, lapply(seq_len(r$n_cl), function(cl) {
+        gene <- do.call(c, lapply(seq_len(r$n_modules), function(cl) {
           seq_along(k)[k == cl][order_list[[cl]]]
         }))
 
@@ -236,7 +236,7 @@ collect_silhouette_data <- function(list_of_fits) {
           gene = gene,
           silhouette = o$silhouette[gene],
           module = as.factor(k[gene]),
-          n_cl = r$n_cl,
+          n_modules = r$n_modules,
           output = j,
           penalization = r$penalization
         )
@@ -320,9 +320,13 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
   # }
 
   silhouette_data <- collect_silhouette_data(list_of_fits)
-  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
+  module_counts <- sapply(
+    list_of_fits, function(fit) fit$results[[1]]$n_modules
+  )
 
-  silhouette_data$n_cl_lbl <- as.factor(sprintf("K = %d", silhouette_data$n_cl))
+  silhouette_data$n_modules_lbl <- as.factor(
+    sprintf("K = %d", silhouette_data$n_modules)
+  )
 
   if (length(penalization) == 1L) {
     silhouette_data <- silhouette_data[
@@ -332,7 +336,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     silhouette_data <- do.call(rbind, lapply(
       seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_modules == module_counts[i], ]
         df[df$penalization == penalization[i]]
       }
     ))
@@ -346,38 +350,40 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     silhouette_data <- do.call(rbind, lapply(
       seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_modules == module_counts[i], ]
         df[df$output == final_config[i]]
       }
     ))
   }
 
-  module_centers <- do.call(rbind, lapply(module_counts, function(n_cl) {
-    df <- silhouette_data[silhouette_data$n_cl == n_cl, ]
+  module_centers <- do.call(rbind, lapply(module_counts, function(n_modules) {
+    df <- silhouette_data[silhouette_data$n_modules == n_modules, ]
     contained_modules <- unique(df$module)
 
     data.frame(
-      n_cl = n_cl,
+      n_modules = n_modules,
       module = contained_modules,
       order =  sapply(contained_modules, function(cl) {
         mean(df[df$module == cl, ]$order)
       })
     )
   }))
-  module_centers$n_cl_lbl <- as.factor(sprintf("K = %d", module_centers$n_cl))
+  module_centers$n_modules_lbl <- as.factor(
+    sprintf("K = %d", module_centers$n_modules)
+  )
 
   avg_silhouette <- data.frame(
-    n_cl = module_counts,
-    silhouette = sapply(module_counts, function(n_cl) {
-      df <- silhouette_data[silhouette_data$n_cl == n_cl, ]
+    n_modules = module_counts,
+    silhouette = sapply(module_counts, function(n_modules) {
+      df <- silhouette_data[silhouette_data$n_modules == n_modules, ]
       mean(df$silhouette)
     })
   )
-  avg_silhouette$n_cl_lbl <- as.factor(sprintf("K = %d", avg_silhouette$n_cl))
+  avg_silhouette$n_modules_lbl <- as.factor(sprintf("K = %d", avg_silhouette$n_modules))
 
   silhouette_data |>
     ggplot2::ggplot() +
-    ggplot2::facet_wrap(n_cl_lbl ~ .) +
+    ggplot2::facet_wrap(n_modules_lbl ~ .) +
     ggplot2::geom_bar(
       ggplot2::aes(x = .data$order, y = .data$silhouette, fill = .data$module),
       stat = "identity",
@@ -464,7 +470,7 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
       }
 
       data.frame(
-        n_cl = r$n_cl,
+        n_modules = r$n_modules,
         penalization = r$penalization,
         value = value,
         variable = "avg-r2-module"
@@ -472,7 +478,7 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
     }))
   }))
 
-  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_cl)
+  module_counts <- sapply(list_of_fits, function(fit) fit$results[[1]]$n_modules)
 
   if (length(penalization) == 1) {
     silhouette_data <- silhouette_data[
@@ -485,7 +491,7 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
     silhouette_data <- do.call(rbind, lapply(
       seq_along(module_counts),
       function(i) {
-        df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
+        df <- silhouette_data[silhouette_data$n_modules == module_counts[i], ]
         df[df$penalization == penalization[i]]
       }
     ))
@@ -493,7 +499,7 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
       seq_along(module_counts),
       function(i) {
         df <- avg_r2_module_data[
-          avg_r2_module_data$n_cl == module_counts[i],
+          avg_r2_module_data$n_modules == module_counts[i],
         ]
         df[df$penalization == penalization[i]]
       }
@@ -501,13 +507,13 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
   }
 
   avg_silhouette <- sapply(seq_along(module_counts), function(i) {
-    df <- silhouette_data[silhouette_data$n_cl == module_counts[i], ]
+    df <- silhouette_data[silhouette_data$n_modules == module_counts[i], ]
     mean(df$silhouette) # average across different configurations
   })
 
   rbind(
     data.frame(
-      n_cl = module_counts,
+      n_modules = module_counts,
       penalization = penalization,
       value = avg_silhouette,
       variable = "avg-silhouette"
@@ -531,10 +537,10 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
       ),
     ) +
     ggplot2::geom_line(
-      ggplot2::aes(.data$n_cl, .data$value), linewidth = 0.25
+      ggplot2::aes(.data$n_modules, .data$value), linewidth = 0.25
     ) +
     ggplot2::geom_point(
-      ggplot2::aes(.data$n_cl, .data$value), size = 0.5
+      ggplot2::aes(.data$n_modules, .data$value), size = 0.5
     ) +
     ggplot2::labs(x = "# of modules (K)", y = NULL) +
     ggplot2::scale_x_continuous(breaks = module_counts) +
