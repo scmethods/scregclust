@@ -333,7 +333,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
     }))
   )) {
     cli::cli_abort(c(
-      "Silhouette scores not to be computed during fitting.",
+      "Silhouette scores were not computed during fitting.",
       "i" = "Set `compute_silhouette = TRUE` in `scregclust`"
     ))
   }
@@ -482,7 +482,7 @@ plot_module_count_helper <- function(list_of_fits, penalization) {
     }))
   )) {
     cli::cli_abort(c(
-      "Silhouette scores not to be computed during fitting.",
+      "Silhouette scores were notcomputed during fitting.",
       "i" = "Set `compute_silhouette = TRUE` in `scregclust`"
     ))
   }
