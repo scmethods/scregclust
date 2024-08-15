@@ -1787,56 +1787,57 @@ scregclust <- function(expression,
       }
 
       if (compute_silhouette) {
-        # Compute cross-module R2
-        sum_squares_test <- matrix(
-          rep.int(colSums(z2_target_centered^2), n_modules),
-          nrow = n_target,
-          ncol = n_modules
-        )
+        # # Compute cross-module R2
+        # sum_squares_test <- matrix(
+        #   rep.int(colSums(z2_target_centered^2), n_modules),
+        #   nrow = n_target,
+        #   ncol = n_modules
+        # )
 
-        for (j in seq_len(n_modules)) {
-          # Get regulators used in model for module j
-          reg_cl <- which(models_final[[m]][, j] == TRUE)
-          if (length(reg_cl) > 0L) {
-            # z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
-            # z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
+        # for (j in seq_len(n_modules)) {
+        #   # Get regulators used in model for module j
+        #   reg_cl <- which(models_final[[m]][, j] == TRUE)
+        #   if (length(reg_cl) > 0L) {
+        #     # z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
+        #     # z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
 
-            # signs_cl <- signs[reg_cl, j]
-            # # Adjust the sign of the predicting regulators and estimate
-            # # coefficients using non-negative least squares for
-            # # sign-consistent estimates (following Meinshausen, 2013)
-            # z1_reg_scaled_cl_sign_corrected <- (
-            #   z1_reg_scaled_cl
-            #   %*% diag(
-            #     signs_cl,
-            #     nrow = length(signs_cl),
-            #     ncol = length(signs_cl)
-            #   )
-            # )
+        #     # signs_cl <- signs[reg_cl, j]
+        #     # # Adjust the sign of the predicting regulators and estimate
+        #     # # coefficients using non-negative least squares for
+        #     # # sign-consistent estimates (following Meinshausen, 2013)
+        #     # z1_reg_scaled_cl_sign_corrected <- (
+        #     #   z1_reg_scaled_cl
+        #     #   %*% diag(
+        #     #     signs_cl,
+        #     #     nrow = length(signs_cl),
+        #     #     ncol = length(signs_cl)
+        #     #   )
+        #     # )
 
-            # beta_hat_nnls <- coef_nnls(
-            #   z1_reg_scaled_cl_sign_corrected,
-            #   z1_target_centered %*% diag(
-            #     1 / z1_target_sds,
-            #     nrow = n_target,
-            #     ncol = n_target
-            #   ),
-            #   eps = tol_nnls, max_iter = max_optim_iter
-            # )$beta * signs_cl * z1_target_sds
+        #     # beta_hat_nnls <- coef_nnls(
+        #     #   z1_reg_scaled_cl_sign_corrected,
+        #     #   z1_target_centered %*% diag(
+        #     #     1 / z1_target_sds,
+        #     #     nrow = n_target,
+        #     #     ncol = n_target
+        #     #   ),
+        #     #   eps = tol_nnls, max_iter = max_optim_iter
+        #     # )$beta * signs_cl * z1_target_sds
 
-            sum_squares_test[, j] <- colSums((
-              z2_target_centered - (
-                z2_reg_scaled[, reg_cl, drop = FALSE] %*% coeffs_final[[m]][[j]]
-              # z2_reg_scaled_cl %*% beta_hat_nnls
-              )
-            )^2)
+        #     sum_squares_test[, j] <- colSums((
+        #       z2_target_centered - (
+        #         z2_reg_scaled[, reg_cl, drop = FALSE] %*% coeffs_final[[m]][[j]]
+        #       # z2_reg_scaled_cl %*% beta_hat_nnls
+        #       )
+        #     )^2)
 
-          }
-        }
+        #   }
+        # }
 
-        r2_cross_module_per_target[[m]] <- (
-          1 - sum_squares_test / colSums(z2_target_centered^2)
-        )
+        r2_cross_module_per_target[[m]] <- r2_final[[m]]
+        # (
+        #   1 - sum_squares_test / colSums(z2_target_centered^2)
+        # )
 
         silhouette[[m]] <- sapply(seq_along(k), function(i) {
           c <- k[i]
