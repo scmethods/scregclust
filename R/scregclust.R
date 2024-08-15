@@ -966,23 +966,23 @@ scregclust <- function(expression,
 
   # Scale first data split for regression preprocessing
   # No scaling of the target genes. Their scale is implicitly dealt with below.
-  z1_target_scaled <- scale(z1_target, scale = FALSE)
+  z1_target_centered <- scale(z1_target, scale = FALSE)
   z1_target_sds <- apply(z1_target, 2, sd)
   z1_reg_scaled <- scale(z1_reg)
 
   # Scale second data split as first one since it will be used as a
   # test set in Step 2
-  z2_target_scaled <- scale(
+  z2_target_centered <- scale(
     z2_target, colMeans(z1_target), scale = FALSE
   )
   z2_reg_scaled <- scale(
     z2_reg, colMeans(z1_reg), apply(z1_reg, 2, sd)
   )
 
-  n_target <- ncol(z1_target_scaled) # number of targets
+  n_target <- ncol(z1_target_centered) # number of targets
   n_reg <- ncol(z1_reg_scaled) # number of predictors
-  n1 <- nrow(z1_target_scaled) # cells in first split
-  n2 <- nrow(z2_target_scaled) # cells in second split
+  n1 <- nrow(z1_target_centered) # cells in first split
+  n2 <- nrow(z2_target_centered) # cells in second split
 
   # Remove unnecessary variables to save memory
   z1_reg <- NULL
@@ -1021,7 +1021,7 @@ scregclust <- function(expression,
     # Default case: Enough cells to perform OLS
 
     # Pre-compute target gene standard deviation
-    beta_init <- coef_ols(z1_target_scaled, z1_reg_scaled)
+    beta_init <- coef_ols(z1_target_centered, z1_reg_scaled)
     init_df <- n_reg
   } else {
     # High-dimensional case. More regulators than cells in the first data split
@@ -1044,17 +1044,17 @@ scregclust <- function(expression,
 
     # # Estimate residual standard deviation for each response
     # # Complex correlation case
-    # z1_target_scaled_res_sds <- sqrt(
-    #   (1 + n_reg * m1^2 / ((n1 + 1) * m2)) / n1 * colSums(z1_target_scaled^2)
+    # z1_target_centered_res_sds <- sqrt(
+    #   (1 + n_reg * m1^2 / ((n1 + 1) * m2)) / n1 * colSums(z1_target_centered^2)
     #   - m1 / (n1 * (n1 + 1) * m2)
-    #   * colSums(crossprod(z1_reg_scaled, z1_target_scaled)^2)
+    #   * colSums(crossprod(z1_reg_scaled, z1_target_centered)^2)
     # )
 
     # # Orthogonal predictors case
-    # z1_target_scaled_res_sds <- sqrt(
-    #   (n_reg + n1 + 1) / (n1 * (n1 + 1)) * colSums(z1_target_scaled^2)
+    # z1_target_centered_res_sds <- sqrt(
+    #   (n_reg + n1 + 1) / (n1 * (n1 + 1)) * colSums(z1_target_centered^2)
     #   - 1 / (n1 * (n1 + 1))
-    #   * colSums(crossprod(z1_reg_scaled, z1_target_scaled)^2)
+    #   * colSums(crossprod(z1_reg_scaled, z1_target_centered)^2)
     # )
 
     ztz <- crossprod(z1_reg_scaled)
@@ -1068,24 +1068,24 @@ scregclust <- function(expression,
       init_df <- sum(es / (es + lambda_minimal))
     }
 
-    beta_init <- coef_ridge(z1_target_scaled, z1_reg_scaled, lambda_minimal)
+    beta_init <- coef_ridge(z1_target_centered, z1_reg_scaled, lambda_minimal)
   }
 
   # Estimate residual standard deviation for each response
-  z1_target_scaled_res_sds <- sqrt(
-    colSums((z1_target_scaled - z1_reg_scaled %*% beta_init)^2)
+  z1_target_centered_res_sds <- sqrt(
+    colSums((z1_target_centered - z1_reg_scaled %*% beta_init)^2)
     / (n1 - init_df)
   )
 
   beta_adapt_sq <- (
     beta_init %*% diag(
-      1 / z1_target_scaled_res_sds, nrow = n_target, ncol = n_target
+      1 / z1_target_centered_res_sds, nrow = n_target, ncol = n_target
     )
   )^2
 
   # Pre-compute cross-correlation matrices
-  cross_corr1 <- fast_cor(z1_target_scaled, z1_reg_scaled)
-  # cross_corr2 <- fast_cor(z2_target_scaled, z2_reg_scaled)
+  cross_corr1 <- fast_cor(z1_target_centered, z1_reg_scaled)
+  # cross_corr2 <- fast_cor(z2_target_centered, z2_reg_scaled)
 
   # Initial module allocation
   if (is.null(initial_target_modules)) {
@@ -1138,7 +1138,7 @@ scregclust <- function(expression,
 
   if (allocate_per_obs) {
     # Pre-allocate large SSQ array to speed up computations below
-    sq_residuals_test <- alloc_array(z2_target_scaled^2, n_modules)
+    sq_residuals_test <- alloc_array(z2_target_centered^2, n_modules)
     attr(sq_residuals_test, "dim") <- c(
       n_modules, n2, n_target
     )
@@ -1296,9 +1296,9 @@ scregclust <- function(expression,
             )
           }
 
-          z1_target_scaled_cl <- z1_target_scaled[, k == j, drop = FALSE]
+          z1_target_centered_cl <- z1_target_centered[, k == j, drop = FALSE]
 
-          n_target_cl <- ncol(z1_target_scaled_cl) # number of genes in module
+          n_target_cl <- ncol(z1_target_centered_cl) # number of genes in module
 
           if (n_target_cl > 0) {
             # Compute weights based on initial (OLS or ridge) coefficient
@@ -1311,13 +1311,13 @@ scregclust <- function(expression,
             admm_fit <- coop_lasso(
               (
                 (
-                  z1_target_scaled_cl
+                  z1_target_centered_cl
                   %*% diag(
-                    1 / z1_target_scaled_res_sds[k == j],
+                    1 / z1_target_centered_res_sds[k == j],
                     nrow = n_target_cl,
                     ncol = n_target_cl
                   )
-                ) / sqrt(nrow(z1_target_scaled_cl))
+                ) / sqrt(nrow(z1_target_centered_cl))
               ),
               z1_reg_scaled / sqrt(nrow(z1_reg_scaled)),
               penalization[l], ws,
@@ -1329,7 +1329,7 @@ scregclust <- function(expression,
 
             beta <- (
               admm_fit$beta %*% diag(
-                z1_target_scaled_res_sds[k == j],
+                z1_target_centered_res_sds[k == j],
                 nrow = n_target_cl,
                 ncol = n_target_cl
               )
@@ -1395,20 +1395,20 @@ scregclust <- function(expression,
         # is constant zero, since there is no intercept. The sum-of-squares
         # for each gene is then just the squared response.
         sum_squares_train <- matrix(
-          rep.int(colSums(z1_target_scaled^2), n_modules),
+          rep.int(colSums(z1_target_centered^2), n_modules),
           nrow = n_target,
           ncol = n_modules
         )
 
         sum_squares_test <- matrix(
-          rep.int(colSums(z2_target_scaled^2), n_modules),
+          rep.int(colSums(z2_target_centered^2), n_modules),
           nrow = n_target,
           ncol = n_modules
         )
 
         if (allocate_per_obs && !last_cycle) {
           # Reset values in SSQ array
-          reset_array(sq_residuals_test, z2_target_scaled^2)
+          reset_array(sq_residuals_test, z2_target_centered^2)
         }
 
         if (verbose) {
@@ -1468,7 +1468,7 @@ scregclust <- function(expression,
 
             beta_hat_nnls <- coef_nnls(
               z1_reg_scaled_cl_sign_corrected,
-              z1_target_scaled %*% diag(
+              z1_target_centered %*% diag(
                 1 / z1_target_sds,
                 nrow = n_target,
                 ncol = n_target
@@ -1477,10 +1477,10 @@ scregclust <- function(expression,
             )$beta * signs_cl * z1_target_sds
 
             residuals_train_nnls <- (
-              z1_target_scaled - z1_reg_scaled_cl %*% beta_hat_nnls
+              z1_target_centered - z1_reg_scaled_cl %*% beta_hat_nnls
             )
             residuals_test_nnls <- (
-              z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls
+              z2_target_centered - z2_reg_scaled_cl %*% beta_hat_nnls
             )
 
             # NNLS squared residuals, SSQ and R-square
@@ -1509,7 +1509,7 @@ scregclust <- function(expression,
 
         r2_test <- 1 - (
           sum_squares_test / colSums(
-            scale(z2_target_scaled, center = TRUE, scale = FALSE)^2
+            scale(z2_target_centered, center = TRUE, scale = FALSE)^2
           )
         )
         best_r2[[cycle]] <- apply(r2_test, 1, max)
@@ -1626,7 +1626,9 @@ scregclust <- function(expression,
           )
         ))
 
-        target_counts <- sapply(c(-1, seq_len(n_modules)), function(s) sum(k == s))
+        target_counts <- sapply(
+          c(-1, seq_len(n_modules)), function(s) sum(k == s)
+        )
         reg_counts <- c(NA_integer_, colSums(models))
 
         cat(count_table(
@@ -1739,7 +1741,7 @@ scregclust <- function(expression,
 
               beta_hat_nnls <- coef_nnls(
                 z1_reg_scaled_cl_sign_corrected,
-                z1_target_scaled[, target_cl, drop = FALSE] %*% diag(
+                z1_target_centered[, target_cl, drop = FALSE] %*% diag(
                   1 / z1_target_sds[target_cl],
                   nrow = length(target_cl),
                   ncol = length(target_cl)
@@ -1748,7 +1750,7 @@ scregclust <- function(expression,
               )$beta * signs_cl * z1_target_sds[target_cl]
 
               ssq[, r] <- colSums((
-                z2_target_scaled[, target_cl, drop = FALSE]
+                z2_target_centered[, target_cl, drop = FALSE]
                 - z2_reg_scaled_cl %*% beta_hat_nnls
               )^2)
             }
@@ -1756,7 +1758,7 @@ scregclust <- function(expression,
             # Compute R2
             r2_removed_vec <- 1 - (
               colSums(ssq) / sum(scale(
-                z2_target_scaled[, target_cl, drop = FALSE],
+                z2_target_centered[, target_cl, drop = FALSE],
                 center = TRUE,
                 scale = FALSE
               )^2)
@@ -1764,7 +1766,7 @@ scregclust <- function(expression,
 
             r2_removed[[m]][[j]] <- 1 - t(
               t(ssq) / colSums(scale(
-                z2_target_scaled[, target_cl, drop = FALSE],
+                z2_target_centered[, target_cl, drop = FALSE],
                 center = TRUE,
                 scale = FALSE
               )^2)
@@ -1789,53 +1791,53 @@ scregclust <- function(expression,
       if (compute_silhouette) {
         # Compute cross-module R2
         sum_squares_test <- matrix(
-          rep.int(colSums(z2_target_scaled^2), n_modules),
+          rep.int(colSums(z2_target_centered^2), n_modules),
           nrow = n_target,
           ncol = n_modules
         )
 
         for (j in seq_len(n_modules)) {
           # Get regulators used in model for module j
-          reg_cl <- which(models[, j] == TRUE)
+          reg_cl <- which(models_final[[m]][, j] == TRUE)
           if (length(reg_cl) > 0L) {
-            z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
+            # z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
             z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
 
-            signs_cl <- signs[reg_cl, j]
-            # Adjust the sign of the predicting regulators and estimate
-            # coefficients using non-negative least squares for
-            # sign-consistent estimates (following Meinshausen, 2013)
-            z1_reg_scaled_cl_sign_corrected <- (
-              z1_reg_scaled_cl
-              %*% diag(
-                signs_cl,
-                nrow = length(signs_cl),
-                ncol = length(signs_cl)
-              )
-            )
+            # signs_cl <- signs[reg_cl, j]
+            # # Adjust the sign of the predicting regulators and estimate
+            # # coefficients using non-negative least squares for
+            # # sign-consistent estimates (following Meinshausen, 2013)
+            # z1_reg_scaled_cl_sign_corrected <- (
+            #   z1_reg_scaled_cl
+            #   %*% diag(
+            #     signs_cl,
+            #     nrow = length(signs_cl),
+            #     ncol = length(signs_cl)
+            #   )
+            # )
 
-            beta_hat_nnls <- coef_nnls(
-              z1_reg_scaled_cl_sign_corrected,
-              z1_target_scaled %*% diag(
-                1 / z1_target_sds,
-                nrow = n_target,
-                ncol = n_target
-              ),
-              eps = tol_nnls, max_iter = max_optim_iter
-            )$beta * signs_cl * z1_target_sds
+            # beta_hat_nnls <- coef_nnls(
+            #   z1_reg_scaled_cl_sign_corrected,
+            #   z1_target_centered %*% diag(
+            #     1 / z1_target_sds,
+            #     nrow = n_target,
+            #     ncol = n_target
+            #   ),
+            #   eps = tol_nnls, max_iter = max_optim_iter
+            # )$beta * signs_cl * z1_target_sds
 
-            sum_squares_test[, j] <- colSums(
-              (z2_target_scaled - z2_reg_scaled_cl %*% beta_hat_nnls)^2
-            )
+            sum_squares_test[, j] <- colSums((
+              z2_target_centered - (
+                z2_reg_scaled_cl %*% coeffs_final[[m]][[j]]
+              # z2_reg_scaled_cl %*% beta_hat_nnls
+              )^2
+            ))
+
           }
         }
 
         r2_cross_module_per_target[[m]] <- (
-          1 - sum_squares_test / colSums(scale(
-            z2_target_scaled,
-            center = TRUE,
-            scale = FALSE
-          )^2)
+          1 - sum_squares_test / colSums(z2_target_centered^2)
         )
 
         silhouette[[m]] <- sapply(seq_along(k), function(i) {
