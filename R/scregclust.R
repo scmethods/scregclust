@@ -1801,7 +1801,7 @@ scregclust <- function(expression,
           reg_cl <- which(models_final[[m]][, j] == TRUE)
           if (length(reg_cl) > 0L) {
             # z1_reg_scaled_cl <- z1_reg_scaled[, reg_cl, drop = FALSE]
-            z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
+            # z2_reg_scaled_cl <- z2_reg_scaled[, reg_cl, drop = FALSE]
 
             # signs_cl <- signs[reg_cl, j]
             # # Adjust the sign of the predicting regulators and estimate
@@ -1828,10 +1828,10 @@ scregclust <- function(expression,
 
             sum_squares_test[, j] <- colSums((
               z2_target_centered - (
-                z2_reg_scaled_cl %*% coeffs_final[[m]][[j]]
+                z2_reg_scaled[, reg_cl, drop = FALSE] %*% coeffs_final[[m]][[j]]
               # z2_reg_scaled_cl %*% beta_hat_nnls
-              )^2
-            ))
+              )
+            )^2)
 
           }
         }
