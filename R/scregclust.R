@@ -1508,9 +1508,7 @@ scregclust <- function(expression,
         }
 
         r2_test <- 1 - (
-          sum_squares_test / colSums(
-            scale(z2_target_centered, center = TRUE, scale = FALSE)^2
-          )
+          sum_squares_test / colSums(z2_target_centered^2)
         )
         best_r2[[cycle]] <- apply(r2_test, 1, max)
 
