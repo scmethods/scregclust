@@ -332,7 +332,7 @@ kmeanspp_init <- function(n_cluster, x = NULL, dm = NULL) {
 #'
 #' @param x Input matrix (n x p)
 #' @param n_cluster Number of clusters
-#' @param n_init_clusterings Number of repeated random initialisations
+#' @param n_init_clusterings Number of repeated random initializations
 #'                           to perform
 #' @param n_max_iter Number of maximum iterations to perform in the k-means
 #'                   algorithm
@@ -428,7 +428,7 @@ remove_empty_modules <- function(module) {
 #'                     been used used during fitting of the `fit` object.
 #'
 #' @return A list of lists of final target modules. One list for each
-#'         parameter in `penalization`. The lists contain the moduleing of
+#'         parameter in `penalization`. The lists contain the modules of
 #'         target genes for each final configuration.
 #'
 #' @concept utilities

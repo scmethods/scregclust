@@ -3,7 +3,7 @@
 \docType{package}
 \name{scregclust-package}
 \alias{scregclust-package}
-\title{scregclust: Reconstructing the Regulatory Programs of Target Genes in scRNA-seq data}
+\title{scregclust: Reconstructing the Regulatory Programs of Target Genes in scRNA-seq Data}
 \description{
 Implementation of the scregclust algorithm (Larsson, Held, et al., 2024, \doi{10.1038/s41467-024-53954-3}) which aims to reconstruct the regulatory programs of target genes in single cell data. Target genes are clustered into modules and each module is associated with a linear model accounting for the regulatory program driving the genes it contains.
 }

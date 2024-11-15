@@ -126,7 +126,7 @@ implies the selection of fewer regulators.
 `noise_threshold` controls the minimum $R^2$ a gene has to achieve across
 modules. Otherwise the gene is marked as noise.
 The run can be reproduced with the command below. A pre-fitted model can be
-downloaded from [GitHub](https://github.com/sven-nelander/scregclust/raw/main/datasets/pbmc_scregclust.rds)
+downloaded from [GitHub](https://github.com/scmethods/scregclust/raw/main/datasets/pbmc_scregclust.rds)
 for convenience.
 
 ```{r run-scregclust}

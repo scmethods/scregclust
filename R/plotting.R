@@ -257,7 +257,7 @@ collect_silhouette_data <- function(list_of_fits) {
 #' @param penalization Either a single numeric value requesting the results
 #'                     for the same penalty parameter across all fits in
 #'                     `list_of_fits`, or one for each individual fit.
-#' @param final_config The final configuration that should be visualised.
+#' @param final_config The final configuration that should be visualized.
 #'                     Either a single number to be used for all fits in
 #'                     `list_of_fits`, or one for each individual fit.
 #'
