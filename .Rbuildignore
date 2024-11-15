@@ -13,3 +13,4 @@ compile_flags.txt
 ^index\.md$
 ^\.github$
 ^\.clang-format$
+^CRAN-SUBMISSION$
