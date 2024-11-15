@@ -447,6 +447,16 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
 #' @export
 plot_module_count_helper <- function(list_of_fits, penalization) {
   if (!(
+    is.list(list_of_fits)
+    && all(sapply(list_of_fits, function(f) "scregclust" %in% class(f)))
+  )) {
+    cli::cli_abort(c(
+      "{.var list_of_fits} is not supplied correctly.",
+      "x" = "It needs to be a list of {.class scregclust} objects."
+    ))
+  }
+
+  if (!(
     is.numeric(penalization)
     && (
       (
