@@ -153,6 +153,13 @@ Metrics for helping in choosing an optimal penalty can be plotted by calling
 `plot` on the object returned from `scregclust`.
 
 ```{r viz-metrics, fig.width=7, fig.height=4, fig.dpi=100}
+#| fig.alt: >
+#|   Boxplots of predictive R^2 per module (bottom) and
+#|   regulator importance (top) over the penalization parameters
+#|   specified during model estimation. A decreasing trend can
+#|   be seen in R^2 per module and a slow and steady increase in
+#|   regulator importance is followed by an explosive increase from
+#|   around 0.4 penalization.
 plot(fit)
 ```
 
@@ -177,5 +184,10 @@ To plot the regulator network of the first configuration for
  `penalization = 0.1` the function `plot_regulator_network` can be used.
 
 ```{r viz-reg-network, fig.width=7, fig.height=7, fig.dpi=100}
+#| fig.alt: >
+#|   Network visualization of modules (colorful circles) and their top
+#|   regulators (grey rectangles). Arrows indicate regulation and their
+#|   thickness represents regulation strength. Red arrows indicate positive
+#|   regulation and blue arrows indicate negative regulation.
 plot_regulator_network(fit$results[[1]]$output[[1]])
 ```
