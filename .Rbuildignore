@@ -5,8 +5,6 @@ compile_flags.txt
 .RData$
 ^vignettes/pbmc_cache
 ^vignettes/pbmc_files
-.h5$
-.rds$
 ^doc$
 ^Meta$
 ^_pkgdown\.yml$
