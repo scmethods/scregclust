@@ -32,7 +32,7 @@ right hand side."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Compute NNLS coefficients</h1>
-      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/main/R/RcppExports.R" class="external-link"><code>R/RcppExports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/HEAD/R/RcppExports.R" class="external-link"><code>R/RcppExports.R</code></a></small>
       <div class="d-none name"><code>coef_nnls.Rd</code></div>
     </div>
 
@@ -68,11 +68,15 @@ right hand side.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing
-betaThe estimated coefficient matrix
-iterationsA vector containing the number of iterations needed
-for the <code>i</code>-th column in <code>y</code> in the <code>i</code>-th entry.</p>
-    </div>
+    <p>A list containing</p>
+<dl><dt>beta</dt>
+<dd><p>The estimated coefficient matrix</p></dd>
+
+<dt>iterations</dt>
+<dd><p>A vector containing the number of iterations needed
+for the <code>i</code>-th column in <code>y</code> in the <code>i</code>-th entry.</p></dd>
+
+</dl></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Duy Khuong Nguyen and Tu Bao Ho. Accelerated anti-lopsided algorithm
