@@ -11,6 +11,6 @@ test_that("fast correlation computation", {
 
   expect_equal(
     c_ref,
-    c
+    c2
   )
 })

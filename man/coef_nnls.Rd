@@ -17,8 +17,8 @@ coef_nnls(x, y, eps = 1e-12, max_iter = 1000L)
 }
 \value{
 A list containing
-{beta}{The estimated coefficient matrix}
-{iterations}{A vector containing the number of iterations needed
+\item{beta}{The estimated coefficient matrix}
+\item{iterations}{A vector containing the number of iterations needed
 for the \code{i}-th column in \code{y} in the \code{i}-th entry.}
 }
 \description{

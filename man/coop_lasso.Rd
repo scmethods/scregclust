@@ -55,8 +55,8 @@ should be printed to the terminal}
 }
 \value{
 A list containing
-{beta}{The coefficients at convergence}
-{iterations}{Number of iterations}
+\item{beta}{The coefficients at convergence}
+\item{iterations}{Number of iterations}
 }
 \description{
 Implements estimation of the coop-lasso problem.

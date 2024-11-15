@@ -55,8 +55,8 @@ jaccard_indicator_comp <- function(gs, eps) {
 #'                should be printed to the terminal
 #'
 #' @return A list containing
-#'     {beta}{The coefficients at convergence}
-#'     {iterations}{Number of iterations}
+#'     \item{beta}{The coefficients at convergence}
+#'     \item{iterations}{Number of iterations}
 #'
 #' @references
 #' Xu et al. (2017) Adaptive relaxed ADMM: Convergence theory and
@@ -78,9 +78,9 @@ coop_lasso <- function(y, x, lambda, weights, beta_0 = NULL, rho_0 = 0.2, alpha_
 #' @param max_iter Maximum number of iterations
 #'
 #' @return A list containing
-#'  {beta}{The estimated coefficient matrix}
-#'  {iterations}{A vector containing the number of iterations needed
-#'              for the `i`-th column in `y` in the `i`-th entry.}
+#'  \item{beta}{The estimated coefficient matrix}
+#'  \item{iterations}{A vector containing the number of iterations needed
+#'                    for the `i`-th column in `y` in the `i`-th entry.}
 #'
 #' @references
 #' Duy Khuong Nguyen and Tu Bao Ho. Accelerated anti-lopsided algorithm
