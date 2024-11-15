@@ -4,7 +4,7 @@
 
 <!-- badges: end -->
 
-![](overview_fig1A_bg.png)
+![A schematic overview of the steps involved in the scregclust algorithm.](overview_fig1A_bg.png "Overview of the scregclust algorithm")
 
 ## Introduction
 
