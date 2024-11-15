@@ -138,7 +138,7 @@ for convenience.
 # saveRDS(fit, file = "pbmc_scregclust.rds")
 
 url <- paste0(
-  "https://github.com/sven-nelander/scregclust/raw/main/datasets/",
+  "https://github.com/scmethods/scregclust/raw/main/datasets/",
   "pbmc_scregclust.rds"
 )
 path <- "pbmc_scregclust.rds"

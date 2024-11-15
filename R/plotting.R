@@ -261,7 +261,7 @@ collect_silhouette_data <- function(list_of_fits) {
 #'                     Either a single number to be used for all fits in
 #'                     `list_of_fits`, or one for each individual fit.
 #'
-#' @return A [`ggplot2`] plot showing the the silhouette scores for each
+#' @return A ggplot2 plot showing the the silhouette scores for each
 #'         supplied fit.
 #'
 #' @concept plotting
@@ -439,7 +439,7 @@ plot_silhouettes <- function(list_of_fits, penalization, final_config = 1L) {
 #'                     for the same penalty parameter across all fits in
 #'                     `list_of_fits`, or one for each individual fit.
 #'
-#' @return A [ggplot2] plot showing the average silhouette score and the
+#' @return A ggplot2 plot showing the average silhouette score and the
 #'         average predictive \eqn{R^2}
 #'
 #' @concept plotting

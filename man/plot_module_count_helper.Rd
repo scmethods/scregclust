@@ -16,7 +16,7 @@ for the same penalty parameter across all fits in
 \code{list_of_fits}, or one for each individual fit.}
 }
 \value{
-A \link{ggplot2} plot showing the average silhouette score and the
+A ggplot2 plot showing the average silhouette score and the
 average predictive \eqn{R^2}
 }
 \description{
