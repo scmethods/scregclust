@@ -30,7 +30,7 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
+<li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
 <li><a class="dropdown-item" href="../articles/pbmc.html">Demonstration of workflow</a></li>
@@ -55,7 +55,7 @@
       <h1>Demonstration of workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/HEAD/vignettes/pbmc.Rmd" class="external-link"><code>vignettes/pbmc.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/main/vignettes/pbmc.Rmd" class="external-link"><code>vignettes/pbmc.Rmd</code></a></small>
       <div class="d-none name"><code>pbmc.Rmd</code></div>
     </div>
 
@@ -135,7 +135,7 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <span><span class="co">#&gt; Second step: Get residuals using fitted parameters for 19168 genes</span></span>
 <span><span class="co">#&gt; Computing corrected count matrix for 19168 genes</span></span>
 <span><span class="co">#&gt; Calculating gene attributes</span></span>
-<span><span class="co">#&gt; Wall clock passed: Time difference of 11.36294 secs</span></span>
+<span><span class="co">#&gt; Wall clock passed: Time difference of 15.02447 secs</span></span>
 <span><span class="co">#&gt; Determine variable features</span></span>
 <span><span class="co">#&gt; Centering data matrix</span></span>
 <span><span class="co">#&gt; Set default assay to SCT</span></span>
@@ -213,7 +213,7 @@ for helping in choosing an optimal penalty can be plotted by calling
 <code>scregclust</code>.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pbmc_files/figure-html/viz-metrics-1.png" alt="Boxplots of predictive R^2 per module (bottom) and regulator importance (top) over the penalization parameters specified during model estimation. A decreasing trend can be seen in R^2 per module and a slow and steady increase in regulator importance is followed by an explosive increase from around 0.4 penalization." width="700"></p>
+<p><img src="pbmc_files/figure-html/viz-metrics-1.png" width="700"></p>
 <p>The results for each penalization parameter are placed in a list,
 <code>results</code>, attached to the <code>fit</code> object. So
 <code>fit$results[[1]]</code> contains the results of running
@@ -235,7 +235,7 @@ penalization parameters.</p>
 <code>plot_regulator_network</code> can be used.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_regulator_network.html">plot_regulator_network</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">output</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="pbmc_files/figure-html/viz-reg-network-1.png" alt="Network visualization of modules (colorful circles) and their top regulators (grey rectangles). Arrows indicate regulation and their thickness represents regulation strength. Red arrows indicate positive regulation and blue arrows indicate negative regulation." width="700"></p>
+<p><img src="pbmc_files/figure-html/viz-reg-network-1.png" width="700"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
