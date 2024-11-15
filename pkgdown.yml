@@ -1,9 +1,9 @@
-pandoc: 3.1.11
-pkgdown: 2.1.0
+pandoc: '3.5'
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   pbmc: pbmc.html
-last_built: 2024-08-15T22:02Z
+last_built: 2024-11-15T08:54Z
 urls:
   reference: https://scmethods.github.io/scregclust/reference
   article: https://scmethods.github.io/scregclust/articles
