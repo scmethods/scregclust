@@ -1439,7 +1439,6 @@ scregclust <- function(expression,
   
         # Change the size of n_targets for compatability with new targets
         n_target <- ncol(z1_target_centered_tmp)
-        }
       } else {
         # If quick_mode = FALSE replace names for compatability with quick_mode
         z1_target_centered_tmp <- z1_target_centered
