@@ -49,9 +49,11 @@ url <- paste0(
   "pbmc_granulocyte_sorted_3k/",
   "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"
 )
-path <- "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"
+data_path <- file.path(
+  tempdir(), "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"
+)
 
-download.file(url, path, cacheOK = FALSE, mode = "wb")
+download.file(url, data_path, cacheOK = FALSE, mode = "wb")
 ```
 
 # Load the data in Seurat and preprocess
@@ -61,7 +63,7 @@ two modalities, "Gene Expression" and "Peaks". We only use the former.
 
 ```{r load-h5}
 pbmc_data <- Read10X_h5(
-  "pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5",
+  data_path,
   use.names = TRUE,
   unique.features = TRUE
 )[["Gene Expression"]]
@@ -141,9 +143,9 @@ url <- paste0(
   "https://github.com/scmethods/scregclust/raw/main/datasets/",
   "pbmc_scregclust.rds"
 )
-path <- "pbmc_scregclust.rds"
-download.file(url, path)
-fit <- readRDS("pbmc_scregclust.rds")
+fit_path <- file.path(tempdir(), "pbmc_scregclust.rds")
+download.file(url, fit_path)
+fit <- readRDS(fit_path)
 ```
 
 # Analysis of results
