@@ -15,7 +15,7 @@ been used used during fitting of the \code{fit} object.}
 }
 \value{
 A list of lists of final target modules. One list for each
-parameter in \code{penalization}. The lists contain the moduleing of
+parameter in \code{penalization}. The lists contain the modules of
 target genes for each final configuration.
 }
 \description{

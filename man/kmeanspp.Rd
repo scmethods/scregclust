@@ -11,7 +11,7 @@ kmeanspp(x, n_cluster, n_init_clusterings = 10L, n_max_iter = 10L)
 
 \item{n_cluster}{Number of clusters}
 
-\item{n_init_clusterings}{Number of repeated random initialisations
+\item{n_init_clusterings}{Number of repeated random initializations
 to perform}
 
 \item{n_max_iter}{Number of maximum iterations to perform in the k-means

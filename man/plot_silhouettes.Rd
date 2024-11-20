@@ -15,7 +15,7 @@ dataset across a variety of module counts (varying
 for the same penalty parameter across all fits in
 \code{list_of_fits}, or one for each individual fit.}
 
-\item{final_config}{The final configuration that should be visualised.
+\item{final_config}{The final configuration that should be visualized.
 Either a single number to be used for all fits in
 \code{list_of_fits}, or one for each individual fit.}
 }

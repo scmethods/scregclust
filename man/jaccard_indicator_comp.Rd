@@ -15,7 +15,7 @@ whole row is empty.}
 lower bound on the Jaccard similarity)}
 }
 \value{
-A list with row and column indicies in the #row x #row indicator
+A list with row and column indices in the #row x #row indicator
 matrix specifying which rows in the original matrix had a distance
 of at most \code{eps}.
 }

@@ -21,7 +21,7 @@ allocate_into_modules <- function(resid_array, resid_var, prior_indicator, k_, u
 #' @param eps an upper bound on the Jaccard distance (`1 - eps` becomes a
 #'            lower bound on the Jaccard similarity)
 #'
-#' @return A list with row and column indicies in the #row x #row indicator
+#' @return A list with row and column indices in the #row x #row indicator
 #'         matrix specifying which rows in the original matrix had a distance
 #'         of at most `eps`.
 #'
