@@ -1446,7 +1446,7 @@ scregclust <- function(expression,
         top_percent_targets <- setdiff(1:nrow(abs_corr_matrix), active_targets)[top_percent_targets_in_temp]
 
         # Indices of the new targets in the range 1:n_target
-        filtered_targets <- c(active_targets, top_10_percent_targets)
+        filtered_targets <- c(active_targets, top_percent_targets)
         }
   
         # Create temporary copies containing only the active targets
