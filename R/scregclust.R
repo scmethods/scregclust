@@ -95,11 +95,9 @@
 #'                           target gene.
 #' @param nowarnings When turned on then no warning messages are shown.
 #' @param verbose Whether to print progress.
-#' @param quick_mode Wheter to use a reduced number of noise targets in
-#'                   the reallocation process (speeds up computation).
-#' @param percent A number between 0 and 1 describing the amount of 
-#'                noisy targets to use in the re-allocation process
-#'                if quick_mode = True.
+#' @param quick_mode Wheter to use a reduced number of noise targets to speed up computations.
+#' @param percent A number between 0 and 1 indicating the amount of noise targets to use in 
+#'                the re-allocation process if \code{quick_mode = TRUE}.
 #'
 #' @return A list with S3 class `scregclust` containing
 #'   \item{penalization}{The supplied `penalization` parameters}

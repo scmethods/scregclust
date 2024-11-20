@@ -33,7 +33,9 @@ scregclust(
   compute_predictive_r2 = TRUE,
   compute_silhouette = FALSE,
   nowarnings = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  quick_mode = TRUE,
+  percent = 0.1
 )
 }
 \arguments{
@@ -157,6 +159,11 @@ target gene.}
 \item{nowarnings}{When turned on then no warning messages are shown.}
 
 \item{verbose}{Whether to print progress.}
+
+\item{quick_mode}{Wheter to use a reduced number of noise targets to speed up computations}
+
+\item{percent}{A number between 0 and 1 indicating the amount of noise targets to use in 
+the re-allocation process if \code{quick_mode = TRUE}.}
 }
 \value{
 A list with S3 class \code{scregclust} containing
