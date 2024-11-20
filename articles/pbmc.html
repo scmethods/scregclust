@@ -8,8 +8,8 @@
 <title>Demonstration of workflow • scregclust</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Demonstration of workflow">
 </head>
 <body>
@@ -93,9 +93,11 @@ name
 <span>  <span class="st">"pbmc_granulocyte_sorted_3k/"</span>,</span>
 <span>  <span class="st">"pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"</span></span>
+<span><span class="va">data_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">path</span>, cacheOK <span class="op">=</span> <span class="cn">FALSE</span>, mode <span class="op">=</span> <span class="st">"wb"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">data_path</span>, cacheOK <span class="op">=</span> <span class="cn">FALSE</span>, mode <span class="op">=</span> <span class="st">"wb"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="load-the-data-in-seurat-and-preprocess">Load the data in Seurat and preprocess<a class="anchor" aria-label="anchor" href="#load-the-data-in-seurat-and-preprocess"></a>
@@ -105,7 +107,7 @@ with two modalities, “Gene Expression” and “Peaks”. We only use the
 former.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pbmc_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/Read10X_h5.html" class="external-link">Read10X_h5</a></span><span class="op">(</span></span>
-<span>  <span class="st">"pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5"</span>,</span>
+<span>  <span class="va">data_path</span>,</span>
 <span>  use.names <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  unique.features <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span><span class="op">[[</span><span class="st">"Gene Expression"</span><span class="op">]</span><span class="op">]</span></span>
@@ -135,7 +137,7 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <span><span class="co">#&gt; Second step: Get residuals using fitted parameters for 19168 genes</span></span>
 <span><span class="co">#&gt; Computing corrected count matrix for 19168 genes</span></span>
 <span><span class="co">#&gt; Calculating gene attributes</span></span>
-<span><span class="co">#&gt; Wall clock passed: Time difference of 15.2136 secs</span></span>
+<span><span class="co">#&gt; Wall clock passed: Time difference of 15.40541 secs</span></span>
 <span><span class="co">#&gt; Determine variable features</span></span>
 <span><span class="co">#&gt; Centering data matrix</span></span>
 <span><span class="co">#&gt; Set default assay to SCT</span></span>
@@ -200,9 +202,9 @@ for convenience.</p>
 <span>  <span class="st">"https://github.com/scmethods/scregclust/raw/main/datasets/"</span>,</span>
 <span>  <span class="st">"pbmc_scregclust.rds"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="st">"pbmc_scregclust.rds"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">path</span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"pbmc_scregclust.rds"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"pbmc_scregclust.rds"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">fit_path</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">fit_path</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="analysis-of-results">Analysis of results<a class="anchor" aria-label="anchor" href="#analysis-of-results"></a>
