@@ -13,7 +13,13 @@ The goal of *scregclust* is to cluster genes by regulatory programs. To do so, g
 
 ## Installation
 
-You can install the development version of *scregclust* from [GitHub](https://github.com/scmethods/scregclust) with:
+You can install the stable version of *scregclust* from [CRAN](https://cran.r-project.org/package=scregclust) with
+
+```r
+install.packages("scregclust")
+```
+
+You can install the current development version of *scregclust* from [GitHub](https://github.com/scmethods/scregclust) with:
 
 ```r
 # install.packages("devtools")
