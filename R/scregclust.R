@@ -202,6 +202,16 @@ scregclust <- function(expression,
   # START input validation
   ###############################
 
+  # This one needs to happen first so we can use it for input validation
+  if (!(
+    is.logical(verbose)
+    && length(verbose) == 1
+  )) {
+    cli::cli_abort(
+      "{.var verbose} needs to be TRUE or FALSE."
+    )
+  }
+
   if (verbose) {
     cat(paste0(cli::symbol$arrow_right, " Validating input"))
     cl <- TRUE
@@ -238,8 +248,6 @@ scregclust <- function(expression,
       "i" =
         "There needs to be one gene symbol for each gene in {.var expression}."
     ))
-  } else {
-    genesymbols <- genesymbols
   }
 
   if (!(
@@ -370,8 +378,6 @@ scregclust <- function(expression,
         "for each column of {.var expression}."
       )
     ))
-  } else {
-    sample_assignment <- sample_assignment
   }
 
   if (!(
@@ -385,8 +391,6 @@ scregclust <- function(expression,
     cli::cli_abort(
       "{.var center} needs to be TRUE or FALSE."
     )
-  } else {
-    center <- center
   }
 
   # If no split indices are provided, then the data split is determined
@@ -643,8 +647,6 @@ scregclust <- function(expression,
     cli::cli_abort(
       "{.var allocate_per_obs} needs to be TRUE or FALSE."
     )
-  } else {
-    allocate_per_obs <- allocate_per_obs
   }
 
   if (!(
@@ -691,8 +693,6 @@ scregclust <- function(expression,
       cli::cli_abort(
         "{.var use_kmeanspp_init} needs to be TRUE or FALSE."
       )
-    } else {
-      use_kmeanspp_init <- use_kmeanspp_init
     }
 
     if (!(
@@ -784,8 +784,6 @@ scregclust <- function(expression,
     cli::cli_abort(
       "{.var compute_predictive_r2} needs to be TRUE or FALSE."
     )
-  } else {
-    compute_predictive_r2 <- compute_predictive_r2
   }
 
   if (!(
@@ -799,23 +797,6 @@ scregclust <- function(expression,
     cli::cli_abort(
       "{.var compute_silhouette} needs to be TRUE or FALSE."
     )
-  } else {
-    compute_silhouette <- compute_silhouette
-  }
-
-  if (!(
-    is.logical(verbose)
-    && length(verbose) == 1
-  )) {
-    if (verbose && cl) {
-      cat("\n")
-      cl <- FALSE
-    }
-    cli::cli_abort(
-      "{.var verbose} needs to be TRUE or FALSE."
-    )
-  } else {
-    verbose <- verbose
   }
 
   if (verbose) {
