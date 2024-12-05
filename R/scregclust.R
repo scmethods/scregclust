@@ -222,6 +222,10 @@ scregclust <- function(expression,
     cli::cli_abort("{.var quick_mode} needs to be TRUE or FALSE")
   }
 
+  if(quick_mode && !allocate_per_obs){
+    cli::cli_abort("{.var quick_mode} is only available when {.var allocate_per_obs} is TRUE")
+  }
+
   if(!(is.numeric(percent) && 0 <= percent && percent <= 1)){
     cli::cli_abort("{.var percent} needs to be numeric in [0, 1]")
   }
