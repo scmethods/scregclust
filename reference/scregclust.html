@@ -72,7 +72,9 @@ regulatory programs from single-cell data.</p>
 <span>  compute_predictive_r2 <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  compute_silhouette <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  nowarnings <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  quick_mode <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  percent <span class="op">=</span> <span class="fl">0.1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -257,6 +259,15 @@ target gene.</p></dd>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Whether to print progress.</p></dd>
+
+
+<dt id="arg-quick-mode">quick_mode<a class="anchor" aria-label="anchor" href="#arg-quick-mode"></a></dt>
+<dd><p>Wheter to use a reduced number of noise targets to speed up computations</p></dd>
+
+
+<dt id="arg-percent">percent<a class="anchor" aria-label="anchor" href="#arg-percent"></a></dt>
+<dd><p>A number between 0 and 1 indicating the amount of noise targets to use in
+the re-allocation process if <code>quick_mode = TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
