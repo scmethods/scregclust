@@ -12,7 +12,7 @@ kmeanspp_init(n_cluster, x = NULL, dm = NULL)
 \item{dm}{distance matrix (between rows of x; of class "dist")}
 }
 \value{
-Row indices of initial cluster centres of x
+Row indices of initial cluster centers of x
 }
 \description{
 Determine initial centers for the kmeans++ algorithm

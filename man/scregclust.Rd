@@ -34,8 +34,8 @@ scregclust(
   compute_silhouette = FALSE,
   nowarnings = FALSE,
   verbose = TRUE,
-  quick_mode = TRUE,
-  percent = 0.1
+  quick_mode = FALSE,
+  quick_mode_percent = 0.1
 )
 }
 \arguments{
@@ -160,10 +160,12 @@ target gene.}
 
 \item{verbose}{Whether to print progress.}
 
-\item{quick_mode}{Wheter to use a reduced number of noise targets to speed up computations}
+\item{quick_mode}{Whether to use a reduced number of noise targets to speed
+up computations.}
 
-\item{percent}{A number between 0 and 1 indicating the amount of noise targets to use in 
-the re-allocation process if \code{quick_mode = TRUE}.}
+\item{quick_mode_percent}{A number in [0, 1) indicating the amount of
+noise targets to use in the re-allocation process
+if \code{quick_mode = TRUE}.}
 }
 \value{
 A list with S3 class \code{scregclust} containing
@@ -175,7 +177,7 @@ parameter. See below.}
 modules.}
 \item{split_indices}{either verbatim the vector given as input or
 a vector encoding the splits as NA = not included,
-1 = split 1 or 2 = split 2. Allows reproduciblity
+1 = split 1 or 2 = split 2. Allows reproducibility
 of data splits.}
 
 For each supplied penalization parameter, \code{results} contains a list with

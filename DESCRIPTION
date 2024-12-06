@@ -1,13 +1,14 @@
 Package: scregclust
 Title: Reconstructing the Regulatory Programs of Target Genes in scRNA-Seq Data
-Version: 0.1.10
+Version: 0.2.0
 Authors@R: c(
     person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7679-7752")),
     person("Ida", "Larsson", ,"ida.larsson@igp.uu.se", role = c("aut"),
            comment = c(ORCID = "0000-0001-5422-4243")),
     person("Sven", "Nelander", ,"sven.nelander@igp.uu.se", role = c("aut"),
-           comment = c(ORCID = "0000-0003-1758-1262")))
+           comment = c(ORCID = "0000-0003-1758-1262")),
+    person("André", "Armatowski", role = c("ctb")))
 Description: Implementation of the scregclust algorithm
   described in Larsson, Held, et al. (2024) <doi:10.1038/s41467-024-53954-3>
   which reconstructs regulatory programs of target genes in scRNA-seq data.

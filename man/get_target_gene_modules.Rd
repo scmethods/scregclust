@@ -10,7 +10,7 @@ get_target_gene_modules(fit, penalization = NULL)
 \item{fit}{An object of class \code{scregclust}}
 
 \item{penalization}{A numeric vector of penalization parameters.
-The penalization parameters specificed here must have
+The penalization parameters specified here must have
 been used used during fitting of the \code{fit} object.}
 }
 \value{

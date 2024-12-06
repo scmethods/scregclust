@@ -12,7 +12,7 @@ find_module_sizes(module, n_modules)
 \item{n_modules}{Total number of modules}
 }
 \value{
-A named vector containining the name of the module (its index or
+A named vector containing the name of the module (its index or
 \code{"Noise"}) and the number of elements in that module
 }
 \description{

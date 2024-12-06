@@ -269,7 +269,7 @@ jaccard_indicator <- function(x, upper_bnd = 0.8) {
 #' @param x data matrix to be clustered
 #' @param dm distance matrix (between rows of x; of class "dist")
 #'
-#' @return Row indices of initial cluster centres of x
+#' @return Row indices of initial cluster centers of x
 #'
 #' @keywords internal
 kmeanspp_init <- function(n_cluster, x = NULL, dm = NULL) {
@@ -379,7 +379,7 @@ kmeanspp <- function(x, n_cluster, n_init_clusterings = 10L, n_max_iter = 10L) {
 #' @param module Vector of module indices
 #' @param n_modules Total number of modules
 #'
-#' @return A named vector containining the name of the module (its index or
+#' @return A named vector containing the name of the module (its index or
 #'         `"Noise"`) and the number of elements in that module
 #'
 #' @concept helpers
@@ -424,7 +424,7 @@ remove_empty_modules <- function(module) {
 #'
 #' @param fit An object of class `scregclust`
 #' @param penalization A numeric vector of penalization parameters.
-#'                     The penalization parameters specificed here must have
+#'                     The penalization parameters specified here must have
 #'                     been used used during fitting of the `fit` object.
 #'
 #' @return A list of lists of final target modules. One list for each

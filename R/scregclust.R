@@ -95,11 +95,11 @@
 #'                           target gene.
 #' @param nowarnings When turned on then no warning messages are shown.
 #' @param verbose Whether to print progress.
-#' @param quick_mode Wheter to use a reduced number of noise targets to speed 
+#' @param quick_mode Whether to use a reduced number of noise targets to speed
 #'                   up computations.
-#' @param quick_mode_percent A number in [0, 1) indicating the amount of 
-#'                           noise targets to use in the re-allocation process 
-#'                           if \code{quick_mode = TRUE}.
+#' @param quick_mode_percent A number in [0, 1) indicating the amount of
+#'                           noise targets to use in the re-allocation process
+#'                           if `quick_mode = TRUE`.
 #'
 #' @return A list with S3 class `scregclust` containing
 #'   \item{penalization}{The supplied `penalization` parameters}
@@ -110,7 +110,7 @@
 #'                                 modules.}
 #'   \item{split_indices}{either verbatim the vector given as input or
 #'                        a vector encoding the splits as NA = not included,
-#'                        1 = split 1 or 2 = split 2. Allows reproduciblity
+#'                        1 = split 1 or 2 = split 2. Allows reproducibility
 #'                        of data splits.}
 #'
 #' For each supplied penalization parameter, `results` contains a list with
@@ -797,28 +797,41 @@ scregclust <- function(expression,
     is.logical(quick_mode)
     && length(quick_mode) == 1
   )) {
+    if (verbose && cl) {
+      cat("\n")
+      cl <- FALSE
+    }
     cli::cli_abort(
       "{.var quick_mode} needs to be TRUE or FALSE."
     )
-  }
-
-  if (quick_mode && !allocate_per_obs) {
-    cli::cli_abort(
-      "{.var quick_mode} only available when {.var allocate_per_obs} is TRUE."
-    )
-  }
-
-  if (!(
-    is.numeric(quick_mode_percent)
-    && length(quick_mode_percent) == 1L 
-    && quick_mode_percent >= 0
-    && quick_mode_percent < 1
-  )) {
-    cli::cli_abort(
-      "{.var quick_mode_percent} needs to be numeric in [0, 1)."
-    )
   } else {
-    quick_mode_percent <- as.double(quick_mode_percent)
+    # These checks are only necessary if quick_mode is active
+    if (!allocate_per_obs) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(
+        "{.var quick_mode} only available when {.var allocate_per_obs} is TRUE."
+      )
+    }
+
+    if (!(
+      is.numeric(quick_mode_percent)
+      && length(quick_mode_percent) == 1L
+      && quick_mode_percent >= 0
+      && quick_mode_percent < 1
+    )) {
+      if (verbose && cl) {
+        cat("\n")
+        cl <- FALSE
+      }
+      cli::cli_abort(
+        "{.var quick_mode_percent} needs to be numeric in [0, 1)."
+      )
+    } else {
+      quick_mode_percent <- as.double(quick_mode_percent)
+    }
   }
 
   if (verbose) {
@@ -1102,7 +1115,7 @@ scregclust <- function(expression,
   # Pre-compute cross-correlation matrices
   cross_corr1 <- fast_cor(z1_target_centered, z1_reg_scaled)
 
-  # Store a copy of abs correlation matrix if quick_mode == T for 
+  # Store a copy of abs correlation matrix if quick_mode == T for
   # the sub-selection of noise targets in the re-allocation step
   if (quick_mode) {
     abs_corr_matrix <- abs(cross_corr1)
@@ -1218,7 +1231,7 @@ scregclust <- function(expression,
     }
 
     # Intialize residual variance and r2 test matrix with standard values
-    # to not break functional code when using a subset of targets in 
+    # to not break functional code when using a subset of targets in
     # quick_mode
     r2_test <- matrix(0, nrow = n_target, ncol = n_modules)
     resid_var <- matrix(1e6, nrow = n_target, ncol = n_modules)
@@ -1415,83 +1428,72 @@ scregclust <- function(expression,
           }
         }
 
-      ###############################################
-      ## START Step 1.5: Determining target genes  ##
-      ###############################################
+        ###############################################
+        ## START Step 1.5: Determining target genes  ##
+        ###############################################
 
-      # With quick_mode == T only a subset of target genes are selected from 
-      # cycle two and onward. For each of the targets inside the noise module 
-      # we determine the biggest (in absolute value) correlation to some active 
-      # regulator. Then we take the top "quick_mode_percent" of the noise 
-      # targets based on this value, together with the targets belonging to 
-      # some active module in the previous step, and this makes up our 
-      # collection of target genes  for which we calculated NNLS and do 
-      # re-allocation
+        # With quick_mode == TRUE only a subset of target genes are selected
+        # from cycle two and onward. For each of the targets inside the noise
+        # module we determine the largest (in absolute value) correlation to
+        # some active regulator. Then we take the top "quick_mode_percent" of
+        # the noise targets based on this value, together with the targets
+        # belonging to some active module in the previous step, and this makes
+        # up our collection of target genes  for which we calculated NNLS and
+        # do re-allocation
 
-      if (
-        cycle != 1 
-        && sum(models) != 0 
-        && quick_mode
-      ) {
-        # Get current active regulators and targets for subsetting the 
-        # correlation matrix
-        active_regulators <- which(apply(models, 1, sum) >= 1)
-        active_targets <- which(idx != -1)
+        if (cycle != 1 && sum(models) != 0 && quick_mode) {
+          # Get current active regulators and targets for subsetting the
+          # correlation matrix
+          active_regulators <- which(apply(models, 1, sum) >= 1)
+          active_targets <- which(idx != -1)
 
-        # If we are in the last cycle we are not interested in any 
-        # noise targets
-        if (last_cycle) {
-          filtered_targets <- active_targets
+          # If we are in the last cycle we are not interested in any
+          # noise targets
+          if (last_cycle) {
+            filtered_targets <- active_targets
+          } else {
+            abs_corr_matrix_temp <- abs_corr_matrix[
+              -active_targets, active_regulators, drop = FALSE
+            ]
+
+            # Create a vector of maximal absolute correlation
+            max_abs_correlation <- apply(abs_corr_matrix_temp, 1, max)
+
+            # Find top quick_mode_percent
+            threshold <- quantile(max_abs_correlation, 1 - quick_mode_percent)
+
+            # Collect index in 1:len(noise_module) which should be active
+            top_percent_targets_in_temp <- which(
+              max_abs_correlation >= threshold
+            )
+
+            # Obtain the index in terms all targets 1:n_target
+            top_percent_targets <- setdiff(
+              seq_len(nrow(abs_corr_matrix)), active_targets
+            )[top_percent_targets_in_temp]
+
+            # Indices of the new targets in the range 1:n_target
+            filtered_targets <- c(active_targets, top_percent_targets)
+          }
+
+          # Create temporary copies containing only the new active targets
+          z1_target_centered_tmp <- z1_target_centered[, filtered_targets]
+          z1_target_sds_tmp <- z1_target_sds[filtered_targets]
+          z2_target_centered_tmp <- z2_target_centered[, filtered_targets]
+
+          # Change the size of n_targets for compatability with the new
+          # active targets
+          n_target <- ncol(z1_target_centered_tmp)
         } else {
-        abs_corr_matrix_temp <- abs_corr_matrix[
-                                             -active_targets, 
-                                              active_regulators, 
-                                              drop = FALSE
-                                              ]
+          # If quick_mode = FALSE replace names for compatability
+          # with quick_mode
+          z1_target_centered_tmp <- z1_target_centered
+          z1_target_sds_tmp <- z1_target_sds
+          z2_target_centered_tmp <- z2_target_centered
 
-        # Create a vector of maximal absolute correlation
-        max_abs_correlation <- apply(
-                                  abs_corr_matrix_temp, 
-                                  1, 
-                                  function(row) max(row)
-                                  )
-  
-        # Find top quick_mode_percent
-        threshold <- quantile(
-                            max_abs_correlation, 
-                            1 - quick_mode_percent
-                            )
-  
-        # Collect index in 1:len(noise_module) which should be active
-        top_percent_targets_in_temp <- which(max_abs_correlation >= threshold)
-
-        # Obtain the index in terms all targets 1:n_target
-        top_percent_targets <- setdiff(
-                                    seq_len(nrow(abs_corr_matrix)),
-                                    active_targets
-                                    )[top_percent_targets_in_temp]
-
-        # Indices of the new targets in the range 1:n_target
-        filtered_targets <- c(active_targets, top_percent_targets)
+          # Filtered targets is now all targets
+          filtered_targets <- seq_len(ncol(z1_target_centered))
         }
-  
-        # Create temporary copies containing only the new active targets
-        z1_target_centered_tmp <- z1_target_centered[, filtered_targets]
-        z1_target_sds_tmp <- z1_target_sds[filtered_targets]
-        z2_target_centered_tmp <- z2_target_centered[, filtered_targets]
-  
-        # Change the size of n_targets for compatability with the new 
-        # active targets
-        n_target <- ncol(z1_target_centered_tmp)
-      } else {
-        # If quick_mode = FALSE replace names for compatability with quick_mode
-        z1_target_centered_tmp <- z1_target_centered
-        z1_target_sds_tmp <- z1_target_sds
-        z2_target_centered_tmp <- z2_target_centered
-
-        # Filtered targets is now all targets
-        filtered_targets <- seq_len(ncol(z1_target_centered))
-      }
 
         ########################################################
         ## START Step 2: Determining target gene coefficients ##
@@ -1600,13 +1602,12 @@ scregclust <- function(expression,
             sum_squares_train[, j] <- colSums(residuals_train_nnls^2)
 
             if (last_cycle) {
-              # To be compatible with the labels we should provide coefficients 
-              # for all targets. Those in the noise module we simply put to 
+              # To be compatible with the labels we should provide coefficients
+              # for all targets. Those in the noise module we simply put to
               # zero
               coefficients <- matrix(
-                                  0, 
-                                  nrow = nrow(beta_hat_nnls), 
-                                  ncol = ncol(z1_target_centered))
+                0, nrow = nrow(beta_hat_nnls), ncol = ncol(z1_target_centered)
+              )
               coefficients[, filtered_targets] <- beta_hat_nnls
               coeffs_final[[m]][[j]] <- coefficients
             }
@@ -1633,8 +1634,7 @@ scregclust <- function(expression,
         # Reset resid_var to be compatible with different active targets
         resid_var[, ] <- 1e6
         resid_var[filtered_targets, ] <- t(
-          t(sum_squares_train)
-          / (n1 - colSums(models))
+          t(sum_squares_train) / (n1 - colSums(models))
         )
 
         if (last_cycle) {
@@ -2101,7 +2101,9 @@ scregclust <- function(expression,
       penalization = penalization,
       results = results,
       initial_target_modules = k_start_cl,
-      split_indices = split_indices
+      split_indices = split_indices,
+      quick_mode = quick_mode,
+      quick_mode_percent = quick_mode_percent
     ),
     class = "scregclust"
   )
@@ -2270,7 +2272,7 @@ print.scregclust_output <- function(x, ...) {
 #'   \item{z2_target}{second data split, non-TF part}
 #'   \item{split_indices}{either verbatim the vector given as input or
 #'                        a vector encoding the splits as NA = not included,
-#'                        1 = split 1 or 2 = split 2. Allows reproduciblity
+#'                        1 = split 1 or 2 = split 2. Allows reproducibility
 #'                        of data splits.}
 #'
 #' @keywords internal

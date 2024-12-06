@@ -39,7 +39,7 @@ a list containing
 \item{z2_target}{second data split, non-TF part}
 \item{split_indices}{either verbatim the vector given as input or
 a vector encoding the splits as NA = not included,
-1 = split 1 or 2 = split 2. Allows reproduciblity
+1 = split 1 or 2 = split 2. Allows reproducibility
 of data splits.}
 }
 \description{

@@ -1,4 +1,1 @@
-Updated CRAN reviewer comments.
-
-* Vignette now writes to temporary directory
-* Reference style corrected in DESCRIPTION
+* New functionality was added to the package
