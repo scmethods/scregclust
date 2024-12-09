@@ -1,7 +1,8 @@
 .DS_Store
 inst/doc
-compile_flags.txt
 /doc/
 /Meta/
 docs
 CRAN-SUBMISSION
+.cache
+compile_commands.json

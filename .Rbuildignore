@@ -1,7 +1,6 @@
 datasets
 scripts
 LICENSE\.md
-compile_flags.txt
 .RData$
 ^vignettes/pbmc_cache
 ^vignettes/pbmc_files
@@ -15,3 +14,5 @@ compile_flags.txt
 ^\.clang-format$
 ^CRAN-SUBMISSION$
 ^cran-comments\.md$
+^\.cache$
+^compile_commands.json$
