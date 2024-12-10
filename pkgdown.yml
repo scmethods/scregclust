@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   pbmc: pbmc.html
-last_built: 2024-12-10T13:47Z
+last_built: 2024-12-10T13:49Z
 urls:
   reference: https://scmethods.github.io/scregclust/reference
   article: https://scmethods.github.io/scregclust/articles
