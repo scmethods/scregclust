@@ -18,8 +18,10 @@ static Matd compute_xtx(const Matd& x) {
 	const auto p = x.cols();
 
 	Matd xtx = Eigen::MatrixXd::Zero(p, p);
-	xtx.selfadjointView<Eigen::Lower>().rankUpdate(x.transpose());
-	xtx.triangularView<Eigen::Upper>() = xtx.transpose();
+	if (p > 0) {
+		xtx.selfadjointView<Eigen::Lower>().rankUpdate(x.transpose());
+		xtx.triangularView<Eigen::Upper>() = xtx.transpose();
+	}
 
 	return xtx;
 }
@@ -70,6 +72,10 @@ Rcpp::List coop_lasso(
 	const auto n = y.rows();
 	const auto m = y.cols();
 	const auto p = x.cols();
+
+	if (n <= 0 || m <= 0 || p <= 0 || x.rows() <= 0) {
+		Rcpp::stop("Matrix dimensions of y and x need to be positive.");
+	}
 
 	if (x.rows() != n) {
 		Rcpp::stop("y and x need to have the same number of rows.");
@@ -398,6 +404,10 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 					 double eps = 1e-12, int max_iter = 1000L) {
 	const auto n = x.cols();
 	auto m = y.cols();	// Will be reduced whenever right-hand sides reach convergence
+
+	if (n <= 0 || m <= 0 || x.rows() <= 0 || y.rows() <= 0) {
+		Rcpp::stop("Matrix dimensions of y and x need to be positive.");
+	}
 
 	// Pre-compute some quantities to speed up computation
 	// Precompute X^T X
