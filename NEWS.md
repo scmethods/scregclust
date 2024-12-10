@@ -1,3 +1,7 @@
+# scregclust 0.2.1
+
+- Bugfix release
+
 # scregclust 0.2.0
 
 ## New features
@@ -14,3 +18,7 @@
 ## Minor changes
 
 - Added CRAN install instructions to the README
+
+# scregclust 0.1.0
+
+- First release on CRAN
