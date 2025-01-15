@@ -1,6 +1,6 @@
 Package: scregclust
 Title: Reconstructing the Regulatory Programs of Target Genes in scRNA-Seq Data
-Version: 0.2.0
+Version: 0.2.0-1
 Authors@R: c(
     person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7679-7752")),

@@ -1,6 +1,8 @@
-# scregclust 0.2.1
+# scregclust 0.2.0-1
 
-- Bugfix release
+- Regulator importance was computed unnecessarily if there is only one
+  regulator. A single regulator is always the most important regulator
+  for a cluster.
 
 # scregclust 0.2.0
 
