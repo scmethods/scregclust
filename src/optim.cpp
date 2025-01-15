@@ -74,7 +74,7 @@ Rcpp::List coop_lasso(
 	const auto p = x.cols();
 
 	if (n <= 0 || m <= 0 || p <= 0 || x.rows() <= 0) {
-		Rcpp::stop("Matrix dimensions of y and x need to be positive.");
+		Rcpp::stop("COOP LASSO: Matrix dimensions of y and x need to be positive.");
 	}
 
 	if (x.rows() != n) {
@@ -406,7 +406,7 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 	auto m = y.cols();	// Will be reduced whenever right-hand sides reach convergence
 
 	if (n <= 0 || m <= 0 || x.rows() <= 0 || y.rows() <= 0) {
-		Rcpp::stop("Matrix dimensions of y and x need to be positive.");
+		Rcpp::stop("NNLS: Matrix dimensions of y and x need to be positive.");
 	}
 
 	// Pre-compute some quantities to speed up computation

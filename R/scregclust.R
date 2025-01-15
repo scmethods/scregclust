@@ -1836,7 +1836,8 @@ scregclust <- function(expression,
           # Get genes in module j
           target_cl <- which(k == j)
 
-          if (length(target_cl) > 0L && length(reg_cl) > 0L) {
+          if (length(target_cl) > 0L && length(reg_cl) > 1L) {
+            # Removing a regulator is only of interest if there are more than 1
             ssq <- matrix(
               NA_real_, nrow = length(target_cl), ncol = length(reg_cl) + 1
             )
