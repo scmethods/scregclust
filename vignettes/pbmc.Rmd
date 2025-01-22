@@ -16,10 +16,10 @@ knitr::opts_chunk$set(
 
 The methods below are described in our article
 
-> Larsson I & Held F, et al. (2023) Reconstructing the regulatory programs
-> underlying the phenotypic plasticity of neural cancers. Preprint available
-> at [bioRxiv](https://www.biorxiv.org/content/10.1101/2023.03.10.532041v1);
-> 2023.03.10.532041.
+> Larsson, Held, et al. (2024) Reconstructing the regulatory programs
+> underlying the phenotypic plasticity of neural cancers.
+> Nature Communications 15, 9699
+> DOI [10.1038/s41467-024-53954-3](https://doi.org/10.1038/s41467-024-53954-3)
 
 Here we demonstrate the scregclust workflow using the PBMC data from
 10X Genomics (available [here](https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-3-k-1-standard-2-0-0)).
