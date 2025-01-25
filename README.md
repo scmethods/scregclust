@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 
+[![CRAN status](https://www.r-pkg.org/badges/version/scregclust)](https://CRAN.R-project.org/package=scregclust)
 <!-- badges: end -->
 
 ![A diagram illustrating the *scregclust* algorithm.](man/figures/overview_fig1A_bg.png "Illustration of the scregclust algorithm")
