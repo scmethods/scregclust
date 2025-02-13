@@ -14,5 +14,5 @@
 ^\.clang-format$
 ^CRAN-SUBMISSION$
 ^cran-comments\.md$
-^\.cache$
-^compile_commands\.json$
+\.cache
+compile_commands\.json
