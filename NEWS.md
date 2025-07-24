@@ -1,3 +1,7 @@
+# scregclust 0.2.1
+
+- Added a vignette illustrating how to supply your own regulator list
+
 # scregclust 0.2.0-1
 
 - Regulator importance was computed unnecessarily if there is only one
