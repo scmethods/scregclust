@@ -10,6 +10,8 @@ navbar:
       menu:
       - text: Demonstration of workflow
         href: articles/pbmc.html
+      - text: Custom regulator list
+        href: articles/mouse.html
   right:
     - icon: fa-github
       href: https://github.com/scmethods/scregclust
