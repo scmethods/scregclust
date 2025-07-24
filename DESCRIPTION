@@ -15,7 +15,7 @@ Description: Implementation of the scregclust algorithm
   Target genes are clustered into modules and each module is associated with a linear
   model describing the regulatory program.
 Encoding: UTF-8
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.1.0)
 Imports:
     Matrix,
     stats,
