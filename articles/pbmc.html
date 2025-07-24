@@ -114,7 +114,7 @@ former.</p>
 <p>We create a Seurat object and follow the Seurat vignette to subset
 the cells and features (genes).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mojaveazure.github.io/seurat-object/reference/CreateSeuratObject.html" class="external-link">CreateSeuratObject</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/CreateSeuratObject.html" class="external-link">CreateSeuratObject</a></span><span class="op">(</span></span>
 <span>  counts <span class="op">=</span> <span class="va">pbmc_data</span>, min.cells <span class="op">=</span> <span class="fl">3</span>, min.features <span class="op">=</span> <span class="fl">200</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -126,8 +126,15 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">pbmc</span>, variable.features.n <span class="op">=</span> <span class="fl">6000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running SCTransform on assay: RNA</span></span>
-<span><span class="co">#&gt; Running SCTransform on layer: counts</span></span>
+<span><span class="co">#&gt; Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `layer` argument instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">Seurat</span> package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/satijalab/seurat/issues&gt;</span>.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
 <span><span class="co">#&gt; vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.</span></span>
+<span><span class="co">#&gt; Calculating cell attributes from input UMI matrix: log_umi</span></span>
 <span><span class="co">#&gt; Variance stabilizing transformation of count matrix of size 19168 by 2686</span></span>
 <span><span class="co">#&gt; Model formula is y ~ log_umi</span></span>
 <span><span class="co">#&gt; Get Negative Binomial regression parameters per gene</span></span>
@@ -136,12 +143,20 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <span><span class="co">#&gt; Second step: Get residuals using fitted parameters for 19168 genes</span></span>
 <span><span class="co">#&gt; Computing corrected count matrix for 19168 genes</span></span>
 <span><span class="co">#&gt; Calculating gene attributes</span></span>
-<span><span class="co">#&gt; Wall clock passed: Time difference of 15.35342 secs</span></span>
+<span><span class="co">#&gt; Wall clock passed: Time difference of 14.32064 secs</span></span>
 <span><span class="co">#&gt; Determine variable features</span></span>
 <span><span class="co">#&gt; Centering data matrix</span></span>
+<span><span class="co">#&gt; Place corrected count matrix in counts slot</span></span>
+<span><span class="co">#&gt; Warning: The `slot` argument of `SetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `layer` argument instead.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">Seurat</span> package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/satijalab/seurat/issues&gt;</span>.</span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
 <span><span class="co">#&gt; Set default assay to SCT</span></span>
 <span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://mojaveazure.github.io/seurat-object/reference/AssayData.html" class="external-link">GetAssayData</a></span><span class="op">(</span><span class="va">pbmc</span>, layer <span class="op">=</span> <span class="st">"scale.data"</span><span class="op">)</span></span>
+<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/AssayData.html" class="external-link">GetAssayData</a></span><span class="op">(</span><span class="va">pbmc</span>, layer <span class="op">=</span> <span class="st">"scale.data"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 6000 2686</span></span></code></pre></div>
 </div>
@@ -249,7 +264,7 @@ penalization parameters.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>
