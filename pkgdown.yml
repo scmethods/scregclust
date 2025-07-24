@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   mouse: mouse.html
   pbmc: pbmc.html
-last_built: 2025-07-24T12:14Z
+last_built: 2025-07-24T14:29Z
 urls:
   reference: https://scmethods.github.io/scregclust/reference
   article: https://scmethods.github.io/scregclust/articles
