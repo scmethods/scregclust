@@ -137,5 +137,17 @@ url <- paste0(
 fit_path <- file.path(tempdir(), "mouse_scregclust.rds")
 download.file(url, fit_path)
 fit <- readRDS(fit_path)
+```
+
+Visualize the fit
+
+```{r viz-fit, fig.width=7, fig.height=4, fig.dpi=100}
+#| fig.alt: >
+#|   Boxplots of predictive R^2 per module (bottom) and
+#|   regulator importance (top) over the penalization parameters
+#|   specified during model estimation. A decreasing trend can
+#|   be seen in R^2 per module until about 0.35 with a drop from 0.4.
+#|   In addition, a slow and steady increase in regulator importance
+#|   is followed by an increase from around 0.4 penalization.
 plot(fit)
 ```
