@@ -31,7 +31,11 @@ Imports:
     rlang,
     Rcpp (>= 1.0.8)
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    hdf5r,
+    glmGamPoi,
+    Seurat,
+    GEOquery
 LinkingTo: Rcpp, RcppEigen
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

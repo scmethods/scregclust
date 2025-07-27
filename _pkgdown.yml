@@ -6,7 +6,7 @@ navbar:
   left:
     - text: Reference
       href: reference/index.html
-    - text: Vignettes
+    - text: Articles
       menu:
       - text: Demonstration of workflow
         href: articles/pbmc.html
