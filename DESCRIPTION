@@ -1,6 +1,6 @@
 Package: scregclust
 Title: Reconstructing the Regulatory Programs of Target Genes in scRNA-Seq Data
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: c(
     person("Felix", "Held", ,"felix.held@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7679-7752")),
@@ -30,19 +30,13 @@ Imports:
     ggplot2,
     rlang,
     Rcpp (>= 1.0.8)
-Suggests: 
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0),
-    Seurat (>= 5.0.0),
-    glmGamPoi,
-    hdf5r,
-    GEOquery
+Suggests:
+    testthat (>= 3.0.0)
 LinkingTo: Rcpp, RcppEigen
-VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 License: GPL (>= 3)
 Config/testthat/edition: 3
 URL: https://scmethods.github.io/scregclust/, https://github.com/scmethods/scregclust/ 
 BugReports: https://github.com/scmethods/scregclust/issues
+Config/Needs/website: rmarkdown

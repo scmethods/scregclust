@@ -2,10 +2,6 @@
 ^scripts$
 ^LICENSE\.md$
 \.RData$
-^vignettes/pbmc_cache
-^vignettes/pbmc_files
-^doc$
-^Meta$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
@@ -16,3 +12,4 @@
 ^cran-comments\.md$
 \.cache
 compile_commands\.json
+^vignettes/articles$

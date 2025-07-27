@@ -1,1 +1,2 @@
-* Added a new vignette
+* Removed vignettes
+* Adressed CRAN issues
