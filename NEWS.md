@@ -1,3 +1,10 @@
+# scregclust 0.2.2
+
+- Vignettes relied heavily on downloading data. Make vignettes articles
+  that appear on the website but not in the actual package, since it is expected
+  that anybody profiting from the vignettes will have an active internet
+  connection anyways.
+
 # scregclust 0.2.1
 
 - Added a vignette illustrating how to supply your own regulator list
