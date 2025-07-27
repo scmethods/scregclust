@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scregclust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,8 +31,8 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-vignettes" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Vignettes</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-vignettes">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/pbmc.html">Demonstration of workflow</a></li>
     <li><a class="dropdown-item" href="../articles/mouse.html">Custom regulator list</a></li>
   </ul>
@@ -56,7 +56,7 @@
       <h1>Demonstration of workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/main/vignettes/pbmc.Rmd" class="external-link"><code>vignettes/pbmc.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/main/vignettes/articles/pbmc.Rmd" class="external-link"><code>vignettes/articles/pbmc.Rmd</code></a></small>
       <div class="d-none name"><code>pbmc.Rmd</code></div>
     </div>
 
@@ -127,13 +127,6 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pbmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">pbmc</span>, variable.features.n <span class="op">=</span> <span class="fl">6000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Running SCTransform on assay: RNA</span></span>
-<span><span class="co">#&gt; Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `layer` argument instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">Seurat</span> package.</span></span>
-<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/satijalab/seurat/issues&gt;</span>.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
 <span><span class="co">#&gt; vst.flavor='v2' set. Using model with fixed slope and excluding poisson genes.</span></span>
 <span><span class="co">#&gt; Calculating cell attributes from input UMI matrix: log_umi</span></span>
 <span><span class="co">#&gt; Variance stabilizing transformation of count matrix of size 19168 by 2686</span></span>
@@ -144,17 +137,10 @@ the 6000 most variable genes are extracted as matrix <code>z</code>.</p>
 <span><span class="co">#&gt; Second step: Get residuals using fitted parameters for 19168 genes</span></span>
 <span><span class="co">#&gt; Computing corrected count matrix for 19168 genes</span></span>
 <span><span class="co">#&gt; Calculating gene attributes</span></span>
-<span><span class="co">#&gt; Wall clock passed: Time difference of 14.46423 secs</span></span>
+<span><span class="co">#&gt; Wall clock passed: Time difference of 13.45881 secs</span></span>
 <span><span class="co">#&gt; Determine variable features</span></span>
 <span><span class="co">#&gt; Centering data matrix</span></span>
 <span><span class="co">#&gt; Place corrected count matrix in counts slot</span></span>
-<span><span class="co">#&gt; Warning: The `slot` argument of `SetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `layer` argument instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">Seurat</span> package.</span></span>
-<span><span class="co">#&gt;   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/satijalab/seurat/issues&gt;</span>.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span>
 <span><span class="co">#&gt; Set default assay to SCT</span></span>
 <span></span>
 <span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/AssayData.html" class="external-link">GetAssayData</a></span><span class="op">(</span><span class="va">pbmc</span>, layer <span class="op">=</span> <span class="st">"scale.data"</span><span class="op">)</span></span>
