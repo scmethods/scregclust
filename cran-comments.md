@@ -1,1 +1,1 @@
-* fixed small bug in optimization logic
+* fixed follow-up bug in plotting logic

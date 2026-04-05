@@ -145,6 +145,9 @@ plot.scregclust <- function(x, ...) {
   r2_module_data <- do.call(rbind, lapply(x$results, function(r) {
     do.call(rbind, lapply(r$output, function(o) {
       idx <- !is.na(o$r2_module)
+      if (sum(idx) == 0) {
+        return(NULL)
+      }
 
       data.frame(
         penalization = r$penalization,
