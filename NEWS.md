@@ -1,3 +1,8 @@
+# scregclust 0.2.3
+
+- Fixed a small bug in NNLS step-size selection
+- Converted articles from RMarkdown to Quarto
+
 # scregclust 0.2.2
 
 - Vignettes relied heavily on downloading data. Make vignettes articles
