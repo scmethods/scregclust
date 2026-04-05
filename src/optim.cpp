@@ -464,7 +464,7 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 		// Accelerated search
 		const Matd dbeta = beta_save - beta;
 		const Matd Q_dbeta = Q * dbeta;
-		const Arr1d alpha2 = (grad.array() * dbeta.array()).square().colwise().sum() /
+		const Arr1d alpha2 = (grad.array() * dbeta.array()).colwise().sum() /
 							 (dbeta.array() * Q_dbeta.array()).colwise().sum();
 
 		for (Eigen::Index j = 0; j < m; j++) {
