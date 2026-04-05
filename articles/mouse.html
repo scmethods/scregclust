@@ -10,7 +10,9 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Manually assigning regulators">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="mouse_files/libs/quarto-html/popper.min.js"></script><script src="mouse_files/libs/quarto-html/tippy.umd.min.js"></script><link href="mouse_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="mouse_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Manually assigning regulators">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scregclust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,44 +47,36 @@
 
 
   </div>
-</nav><div class="container template-article">
-
-
-
-
+</nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Manually assigning regulators</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/v0.2.2/vignettes/articles/mouse.Rmd" class="external-link"><code>vignettes/articles/mouse.Rmd</code></a></small>
-      <div class="d-none name"><code>mouse.Rmd</code></div>
+
+
+
+
+      <small class="dont-index">Source: <a href="https://github.com/scmethods/scregclust/blob/main/vignettes/articles/mouse.qmd" class="external-link"><code>vignettes/articles/mouse.qmd</code></a></small>
+      <div class="d-none name"><code></code></div>
     </div>
 
-    
-    
-<p>The purpose of this vignette is to show how to manually configure the
-<code>is_regulator</code> vector, e.g. when you want to run
-<em>scregclust</em> on a custom set of regulators (not TFs or kinases),
-or if your data is from an organism other than human, e.g. mouse. This
-vignette will show how to do this using a data set from the mouse brain
-(<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60361" class="external-link">GSE60361</a>),
-and a <a href="https://resources.aertslab.org/cistarget/tf_lists/" class="external-link">list
-of mouse TFs provided by Aertslab</a>.</p>
-<p>We use <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> for
-pre-processing of the data.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+
+
+
+
+
+    <p>The purpose of this vignette is to show how to manually configure the <code>is_regulator</code> vector, e.g. when you want to run <em>scregclust</em> on a custom set of regulators (not TFs or kinases), or if your data is from an organism other than human, e.g. mouse. This vignette will show how to do this using a data set from the mouse brain (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60361" class="external-link">GSE60361</a>), and a <a href="https://resources.aertslab.org/cistarget/tf_lists/" class="external-link">list of mouse TFs provided by Aertslab</a>.</p>
+<p>We use <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> for pre-processing of the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load required packages</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/seandavi/GEOquery" class="external-link">GEOquery</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://scmethods.github.io/scregclust/">scregclust</a></span><span class="op">)</span></span></code></pre></div>
-<p>Read in the data and preprocess it in <em>Seurat</em>. Here, we
-simply use the full dataset. In practice, you would perform additional
-quality checks and, e.g., investigate PCA, UMAP, or TSNE plots of the
-data. We use the package <em>GEOquery</em> to download meta data for the
-data.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+</div>
+<p>Read in the data and preprocess it in <em>Seurat</em>. Here, we simply use the full dataset. In practice, you would perform additional quality checks and, e.g., investigate PCA, UMAP, or TSNE plots of the data. We use the package <em>GEOquery</em> to download meta data for the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Download the gene expression data</span></span>
 <span><span class="va">url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
 <span>  <span class="st">"https://www.ncbi.nlm.nih.gov/geo/download/"</span>,</span>
@@ -121,10 +115,10 @@ data.</p>
 <span>  meta.data <span class="op">=</span> <span class="va">meta_data</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">mouse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/SCTransform.html" class="external-link">SCTransform</a></span><span class="op">(</span><span class="va">mouse</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>The built in transcription factor lists in <em>scregclust</em> are
-for human transcription factors (TFs) and kinases. Download and read in
-a list of mouse-specific TFs.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+</div>
+<p>The built in transcription factor lists in <em>scregclust</em> are for human transcription factors (TFs) and kinases. Download and read in a list of mouse-specific TFs.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">url</span> <span class="op">&lt;-</span> <span class="st">"https://resources.aertslab.org/cistarget/tf_lists/allTFs_mm.txt"</span></span>
 <span><span class="va">tfs_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"allTFs_mm.txt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">tfs_path</span>, cacheOK <span class="op">=</span> <span class="cn">FALSE</span>, mode <span class="op">=</span> <span class="st">"w"</span><span class="op">)</span></span>
@@ -135,26 +129,31 @@ a list of mouse-specific TFs.</p>
 <span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">tfs</span> <span class="op">&lt;-</span> <span class="va">tfs</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span></span></code></pre></div>
+</div>
 <p>Extract <code>gene x cells</code> table</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/AssayData.html" class="external-link">GetAssayData</a></span><span class="op">(</span><span class="va">mouse</span>, layer <span class="op">=</span> <span class="st">"scale.data"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3000 3005</span></span></code></pre></div>
+</div>
 <p>Make sure data is in the format for <em>scregclust</em></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scregclust_format.html">scregclust_format</a></span><span class="op">(</span><span class="va">z</span>, mode <span class="op">=</span> <span class="st">"TF"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">genesymbols</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">genesymbols</span></span>
 <span><span class="va">sample_assignment</span> <span class="op">&lt;-</span> <span class="va">out</span><span class="op">$</span><span class="va">sample_assignment</span></span></code></pre></div>
+</div>
 <p>Manually create the indicator vector <code>is_regulator</code></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">is_regulator</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">genesymbols</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">is_regulator</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">genesymbols</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">tfs</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></code></pre></div>
-<p>Finally, run scregclust to estimate the model. The run can be
-reproduced with the command below. A pre-fitted model can be downloaded
-from <a href="https://github.com/scmethods/scregclust/raw/main/datasets/mouse_scregclust.rds" class="external-link">GitHub</a>
-for convenience.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+</div>
+<p>Finally, run scregclust to estimate the model. The run can be reproduced with the command below. A pre-fitted model can be downloaded from <a href="https://github.com/scmethods/scregclust/raw/main/datasets/mouse_scregclust.rds" class="external-link">GitHub</a> for convenience.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># # Run scregclust</span></span>
 <span><span class="co"># set.seed(8374)</span></span>
 <span><span class="co"># fit &lt;- scregclust(</span></span>
@@ -170,13 +169,106 @@ for convenience.</p>
 <span><span class="va">fit_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"mouse_scregclust.rds"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">url</span>, <span class="va">fit_path</span><span class="op">)</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="va">fit_path</span><span class="op">)</span></span></code></pre></div>
+</div>
 <p>Visualize the fit</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mouse_files/figure-html/viz-fit-1.png" alt="Boxplots of predictive R^2 per module (bottom) and regulator importance (top) over the penalization parameters specified during model estimation. A decreasing trend can be seen in R^2 per module until about 0.35 with a drop from 0.4. In addition, a slow and steady increase in regulator importance is followed by an increase from around 0.4 penalization." width="700"></p>
-  </main>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="mouse_files/figure-html/viz-fit-1.png" alt="Boxplots of predictive R^2 per module (bottom) and regulator importance (top) over the penalization parameters specified during model estimation. A decreasing trend can be seen in R^2 per module until about 0.35 with a drop from 0.4. In addition, a slow and steady increase in regulator importance is followed by an increase from around 0.4 penalization." width="700"></p>
+</figure>
+</div>
+</div>
 </div>
 
+
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'light-border',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config);
+    }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script></main>
+</div>
 
 
     <footer><div class="pkgdown-footer-left">
@@ -184,7 +276,7 @@ for convenience.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

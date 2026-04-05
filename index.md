@@ -1,0 +1,20 @@
+# Single-cell Regulatory-driven Clustering (scregclust)
+
+![A schematic overview of the steps involved in the scregclust
+algorithm.](overview_fig1A_bg.png "Overview of the scregclust algorithm")
+
+A schematic overview of the steps involved in the scregclust algorithm.
+
+## Introduction
+
+The goal of *scregclust* is to cluster genes by regulatory programs. To
+do so, genes are clustered into modules which in turn are associated
+with regulators. The algorithm alternates between associating regulators
+to modules and reallocating target genes into modules.
+
+A detailed description of the algorithm and an in-depth evaluation of
+its properties can be found in our original research article [Larsson,
+Held, et al. (2024) Reconstructing the regulatory programs underlying
+the phenotypic plasticity of neural cancers. Nature Communications 15,
+9699 DOI
+10.1038/s41467-024-53954-3](https://doi.org/10.1038/s41467-024-53954-3)

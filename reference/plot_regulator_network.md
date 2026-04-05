@@ -1,0 +1,44 @@
+# Plotting the regulatory table from scregclust as a directed graph
+
+Plotting the regulatory table from scregclust as a directed graph
+
+## Usage
+
+``` r
+plot_regulator_network(
+  output,
+  arrow_size = 0.3,
+  edge_scaling = 30,
+  no_links = 6,
+  col = c("gray80", "#FC7165", "#BD828C", "#9D8A9F", "#7D92B2", "#BDA88C", "#FCBD65",
+    "#F2BB90", "#E7B9BA", "#BDB69C", "#92B27D", "#9B8BA5", "#9D7DB2", "#94A5BF")
+)
+```
+
+## Arguments
+
+- output:
+
+  Object of type `scregclust_output` from a fit of the scregclust
+  algorithm.
+
+- arrow_size:
+
+  Size of arrow head
+
+- edge_scaling:
+
+  Scaling factor for edge width
+
+- no_links:
+
+  Threshold value (0-10) for number of edges to show, higher value =
+  more stringent threshold = less edges
+
+- col:
+
+  color
+
+## Value
+
+Graph with gene modules and regulators as nodes
