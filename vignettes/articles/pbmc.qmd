@@ -1,8 +1,14 @@
 ---
 title: "Demonstration of workflow"
+format:
+  html:
+    fig-width: 7
+    fig-height: 4
+    fig-dpi: 100
 ---
 
-```{r, include = FALSE}
+```{r}
+#| include: false
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -23,7 +29,11 @@ This is the same data used in an [introductory vignette](https://satijalab.org/s
 for the Seurat package. We use [Seurat](https://satijalab.org/seurat/) for
 pre-processing of the data.
 
-```{r load-packages, results='hide', message=FALSE}
+```{r}
+#| label: load-packages
+#| results: hide
+#| message: false
+
 # Load required packages
 library(Seurat)
 library(scregclust)
@@ -39,7 +49,8 @@ However you obtain the data, the code below assumes that the HDF5 file
 containing it is placed in the same folder as this script with the name
 `pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5`.
 
-```{r download-data}
+```{r}
+#| label: download-data
 url <- paste0(
   "https://cf.10xgenomics.com/samples/cell-arc/2.0.0/",
   "pbmc_granulocyte_sorted_3k/",
@@ -57,7 +68,8 @@ download.file(url, data_path, cacheOK = FALSE, mode = "wb")
 To perform preprocessing use Seurat to load the data. The file ships with
 two modalities, "Gene Expression" and "Peaks". We only use the former.
 
-```{r load-h5}
+```{r}
+#| label: load-h5
 pbmc_data <- Read10X_h5(
   data_path,
   use.names = TRUE,
@@ -68,7 +80,8 @@ pbmc_data <- Read10X_h5(
 We create a Seurat object and follow the Seurat vignette to subset the
 cells and features (genes).
 
-```{r create-seurat-object}
+```{r}
+#| label: create-seurat-object
 pbmc <- CreateSeuratObject(
   counts = pbmc_data, min.cells = 3, min.features = 200
 )
@@ -81,7 +94,8 @@ pbmc <- subset(pbmc, subset = percent.mt < 30 & nFeature_RNA < 6000)
 used for variance stabilization of the data and Pearson residuals for the
 6000 most variable genes are extracted as matrix `z`.
 
-```{r apply-var-stabilization}
+```{r}
+#| label: apply-var-stabilization
 pbmc <- SCTransform(pbmc, variable.features.n = 6000)
 
 z <- GetAssayData(pbmc, layer = "scale.data")
@@ -96,7 +110,8 @@ By default, transcription factors are used as regulators. Setting `mode`
 to `"kinase"` uses kinases instead of transcription factors. A list of the
 regulators used internally is returned by `get_regulator_list()`.
 
-```{r prep-scregclust}
+```{r}
+#| label: prep-scregclust
 out <- scregclust_format(z, mode = "TF")
 ```
 
@@ -111,7 +126,8 @@ The output of `scregclust_format` is a list with three elements.
    as a regulator according to the model of `scregclust_format` (`"TF"` or
    `"kinase"`) and 0 otherwise.
 
-```{r extract-scregclust-arguments}
+```{r}
+#| label: extract-scregclust-arguments
 genesymbols <- out$genesymbols
 sample_assignment <- out$sample_assignment
 is_regulator <- out$is_regulator
@@ -127,7 +143,9 @@ The run can be reproduced with the command below. A pre-fitted model can be
 downloaded from [GitHub](https://github.com/scmethods/scregclust/raw/main/datasets/pbmc_scregclust.rds)
 for convenience.
 
-```{r run-scregclust}
+```{r}
+#| label: run-scregclust
+
 # set.seed(8374)
 # fit <- scregclust(
 #   z, genesymbols, is_regulator, penalization = seq(0.1, 0.5, 0.05),
@@ -150,8 +168,9 @@ Results can be visualized easily using built-in functions.
 Metrics for helping in choosing an optimal penalty can be plotted by calling
 `plot` on the object returned from `scregclust`.
 
-```{r viz-metrics, fig.width=7, fig.height=4, fig.dpi=100}
-#| fig.alt: >
+```{r}
+#| label: viz-metrics
+#| fig-alt: >
 #|   Boxplots of predictive R^2 per module (bottom) and
 #|   regulator importance (top) over the penalization parameters
 #|   specified during model estimation. A decreasing trend can
@@ -171,7 +190,8 @@ The results for each such configuration are contained in the list `output`.
 This means that `fit$results[[1]]$output[[1]]` contains the results for
 the first final configuration. More than one may be available.
 
-```{r n-configs}
+```{r}
+#| label: n-configs
 sapply(fit$results, function(r) length(r$output))
 ```
 
@@ -181,8 +201,11 @@ penalization parameters.
 To plot the regulator network of the first configuration for
  `penalization = 0.1` the function `plot_regulator_network` can be used.
 
-```{r viz-reg-network, fig.width=7, fig.height=7, fig.dpi=100}
-#| fig.alt: >
+```{r}
+#| label: viz-reg-network
+#| fig-width: 7
+#| fig-height: 7
+#| fig-alt: >
 #|   Network visualization of modules (colorful circles) and their top
 #|   regulators (grey rectangles). Arrows indicate regulation and their
 #|   thickness represents regulation strength. Red arrows indicate positive

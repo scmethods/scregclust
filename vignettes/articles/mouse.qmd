@@ -1,8 +1,14 @@
 ---
 title: "Manually assigning regulators"
+format:
+  html:
+    fig-width: 7
+    fig-height: 4
+    fig-dpi: 100
 ---
 
-```{r, include = FALSE}
+```{r}
+#| include: false
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -18,7 +24,11 @@ the mouse brain ([GSE60361](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=G
 
 We use [Seurat](https://satijalab.org/seurat/) for pre-processing of the data.
 
-```{r load-packages, results='hide', message=FALSE}
+```{r}
+#| label: load-packages
+#| results: hide
+#| message: false
+
 # Load required packages
 library(GEOquery)
 library(Seurat)
@@ -30,7 +40,12 @@ full dataset. In practice, you would perform additional quality checks and,
 e.g., investigate PCA, UMAP, or TSNE plots of the data. We use the
 package *GEOquery* to download meta data for the data.
 
-```{r load-data, results='hide', message=FALSE, warning=FALSE}
+```{r}
+#| label: load-data
+#| results: hide
+#| message: false
+#| warning: false
+
 # Download the gene expression data
 url <- paste0(
   "https://www.ncbi.nlm.nih.gov/geo/download/",
@@ -75,7 +90,11 @@ The built in transcription factor lists in *scregclust* are for human
 transcription factors (TFs) and kinases. Download and read in a list of
 mouse-specific TFs.
 
-```{r load-tfs, results='hide', message=FALSE}
+```{r}
+#| label: load-tfs
+#| results: hide
+#| message: false
+
 url <- "https://resources.aertslab.org/cistarget/tf_lists/allTFs_mm.txt"
 tfs_path <- file.path(tempdir(), "allTFs_mm.txt")
 download.file(url, tfs_path, cacheOK = FALSE, mode = "w")
@@ -90,14 +109,16 @@ tfs <- tfs[, 1]
 
 Extract `gene x cells` table
 
-```{r extract-gene-cells-table}
+```{r}
+#| label:  extract-gene-cells-table
 z <- GetAssayData(mouse, layer = "scale.data")
 dim(z)
 ```
 
 Make sure data is in the format for *scregclust*
 
-```{r scregclust-format}
+```{r}
+#| label: scregclust-format
 out <- scregclust_format(z, mode = "TF")
 
 genesymbols <- out$genesymbols
@@ -106,7 +127,8 @@ sample_assignment <- out$sample_assignment
 
 Manually create the indicator vector `is_regulator`
 
-```{r manual-is-regulator}
+```{r}
+#| label: manual-is-regulator
 is_regulator <- rep(0, length = length(genesymbols))
 is_regulator[which(genesymbols %in% tfs)] <- 1
 ```
@@ -116,7 +138,9 @@ the command below. A pre-fitted model can be downloaded from
 [GitHub](https://github.com/scmethods/scregclust/raw/main/datasets/mouse_scregclust.rds)
 for convenience.
 
-```{r run-scregclust}
+```{r}
+#| label: run-scregclust
+
 # # Run scregclust
 # set.seed(8374)
 # fit <- scregclust(
@@ -136,8 +160,9 @@ fit <- readRDS(fit_path)
 
 Visualize the fit
 
-```{r viz-fit, fig.width=7, fig.height=4, fig.dpi=100}
-#| fig.alt: >
+```{r}
+#| label: viz-fit
+#| fig-alt: >
 #|   Boxplots of predictive R^2 per module (bottom) and
 #|   regulator importance (top) over the penalization parameters
 #|   specified during model estimation. A decreasing trend can
