@@ -88,7 +88,7 @@ pbmc <- SCTransform(pbmc, variable.features.n = 6000)
 #> Second step: Get residuals using fitted parameters for 19168 genes
 #> Computing corrected count matrix for 19168 genes
 #> Calculating gene attributes
-#> Wall clock passed: Time difference of 14.52116 secs
+#> Wall clock passed: Time difference of 15.78978 secs
 #> Determine variable features
 #> Centering data matrix
 #> Place corrected count matrix in counts slot

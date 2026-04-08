@@ -2,6 +2,8 @@
 
 ## scregclust 0.2.3
 
+CRAN release: 2026-04-05
+
 - Fixed a small bug in NNLS step-size selection
 - Converted articles from RMarkdown to Quarto
 
