@@ -319,19 +319,6 @@ Rcpp::List coop_lasso(
 	return out;
 }
 
-// static void remove_kkt_elements(const Matd& beta, const Matd& grad, Matd& grad_bar) {
-// 	const auto n = beta.rows();
-// 	const auto m = beta.cols();
-
-// 	for (Eigen::Index j = 0; j < m; j++) {
-// 		for (Eigen::Index i = 0; i < n; i++) {
-// 	 		if ((beta(i, j) == 0.0) && (grad(i, j) > 0.0)) {
-// 	 			grad_bar(i, j) = 0.0;
-// 	 		}
-// 		}
-// 	}
-// }
-
 static void greedy_coord_descent(const Matd& Q, Matd& beta, Matd& grad) {
 	const auto n = beta.rows();
 	const auto m = beta.cols();
@@ -346,18 +333,6 @@ static void greedy_coord_descent(const Matd& Q, Matd& beta, Matd& grad) {
 								.cast<double>() *
 							grad.col(j).array().abs())
 							   .maxCoeff(&p);
-
-			// Eigen::Index p = -1;
-			// double max_val = 0.0;
-			// for (Eigen::Index i = 0; i < n; i++) {
-			// 	if ((beta(i, j) > 0.0) || (grad(i, j) < 0.0)) {
-			// 		auto abs_grad = fabs(grad(i, j));
-			// 		if (abs_grad > max_val) {
-			// 			max_val = abs_grad;
-			// 			p = i;
-			// 		}
-			// 	}
-			// }
 
 			// Perform coordinate descent on the selected coefficient
 			if (max_val == 0.0) {
@@ -423,7 +398,6 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 	Matd beta_final = Eigen::MatrixXd::Zero(n, m);
 	Matd beta = Eigen::MatrixXd::Zero(n, m);
 	Matd grad_bar = grad;
-	// remove_kkt_elements(beta, grad, grad_bar);
 	grad_bar.array() *=
 		(1 - ((beta.array() == 0.0) && (grad.array() > 0.0))).cast<double>();
 
@@ -487,7 +461,6 @@ Rcpp::List coef_nnls(Eigen::Map<Eigen::MatrixXd> x, Eigen::Map<Eigen::MatrixXd> 
 
 		// Compute error
 		grad_bar = grad;
-		// remove_kkt_elements(beta, grad, grad_bar);
 		grad_bar.array() *=
 			(1 - ((beta.array() == 0.0) && (grad.array() > 0.0))).cast<double>();
 
