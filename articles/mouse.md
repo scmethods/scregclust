@@ -13,6 +13,7 @@ We use [Seurat](https://satijalab.org/seurat/) for pre-processing of the
 data.
 
 ``` r
+
 # Load required packages
 library(GEOquery)
 library(Seurat)
@@ -25,6 +26,7 @@ and, e.g., investigate PCA, UMAP, or TSNE plots of the data. We use the
 package *GEOquery* to download meta data for the data.
 
 ``` r
+
 # Download the gene expression data
 url <- paste0(
   "https://www.ncbi.nlm.nih.gov/geo/download/",
@@ -70,6 +72,7 @@ transcription factors (TFs) and kinases. Download and read in a list of
 mouse-specific TFs.
 
 ``` r
+
 url <- "https://resources.aertslab.org/cistarget/tf_lists/allTFs_mm.txt"
 tfs_path <- file.path(tempdir(), "allTFs_mm.txt")
 download.file(url, tfs_path, cacheOK = FALSE, mode = "w")
@@ -85,6 +88,7 @@ tfs <- tfs[, 1]
 Extract `gene x cells` table
 
 ``` r
+
 z <- GetAssayData(mouse, layer = "scale.data")
 dim(z)
 #> [1] 3000 3005
@@ -93,6 +97,7 @@ dim(z)
 Make sure data is in the format for *scregclust*
 
 ``` r
+
 out <- scregclust_format(z, mode = "TF")
 
 genesymbols <- out$genesymbols
@@ -102,6 +107,7 @@ sample_assignment <- out$sample_assignment
 Manually create the indicator vector `is_regulator`
 
 ``` r
+
 is_regulator <- rep(0, length = length(genesymbols))
 is_regulator[which(genesymbols %in% tfs)] <- 1
 ```
@@ -112,6 +118,7 @@ with the command below. A pre-fitted model can be downloaded from
 for convenience.
 
 ``` r
+
 # # Run scregclust
 # set.seed(8374)
 # fit <- scregclust(
@@ -132,6 +139,7 @@ fit <- readRDS(fit_path)
 Visualize the fit
 
 ``` r
+
 plot(fit)
 ```
 

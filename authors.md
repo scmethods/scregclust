@@ -14,7 +14,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/scmethods/scregclust/blob/v0.2.4/inst/CITATION)
+[`inst/CITATION`](https://github.com/scmethods/scregclust/blob/main/inst/CITATION)
 
 Larsson I, Held F, Popova G, Koc A, Kundu S, Jörnsten R, Nelander S
 (2024). “Reconstructing the regulatory programs underlying the
